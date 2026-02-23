@@ -1,9 +1,68 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
-    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
-        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22225" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
+    <entity name="BrainDump" representedClassName="BrainDump" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="mode" attributeType="String"/>
+        <attribute name="processedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="rawText" attributeType="String"/>
+        <attribute name="summary" optional="YES" attributeType="String"/>
+        <relationship name="extractions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ExtractedItem" inverseName="sourceDump" inverseEntity="ExtractedItem"/>
+        <relationship name="decision" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Decision" inverseName="sourceDump" inverseEntity="Decision"/>
     </entity>
-    <elements>
-        <element name="Item" positionX="-63" positionY="-18" width="128" height="44"/>
-    </elements>
+    <entity name="Decision" representedClassName="Decision" syncable="YES" codeGenerationType="class">
+        <attribute name="analysis" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isLockedPreview" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="optionA" optional="YES" attributeType="String"/>
+        <attribute name="optionB" optional="YES" attributeType="String"/>
+        <attribute name="question" attributeType="String"/>
+        <attribute name="resolvedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="status" attributeType="String" defaultValueString="active"/>
+        <attribute name="suggestedNextStep" optional="YES" attributeType="String"/>
+        <relationship name="sourceDump" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BrainDump" inverseName="decision" inverseEntity="BrainDump"/>
+        <relationship name="sourceExtraction" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ExtractedItem" inverseName="linkedDecision" inverseEntity="ExtractedItem"/>
+        <relationship name="tasks" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="TaskItem" inverseName="sourceDecision" inverseEntity="TaskItem"/>
+    </entity>
+    <entity name="ExtractedItem" representedClassName="ExtractedItem" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isPromotedToTask" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="text" attributeType="String"/>
+        <attribute name="type" attributeType="String"/>
+        <relationship name="linkedDecision" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Decision" inverseName="sourceExtraction" inverseEntity="Decision"/>
+        <relationship name="linkedTask" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TaskItem" inverseName="sourceExtraction" inverseEntity="TaskItem"/>
+        <relationship name="sourceDump" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BrainDump" inverseName="extractions" inverseEntity="BrainDump"/>
+    </entity>
+    <entity name="InsightDaily" representedClassName="InsightDaily" syncable="YES" codeGenerationType="class">
+        <attribute name="clarityScore" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dayStamp" attributeType="String"/>
+        <attribute name="decisionsClosedCount" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="repeatedThemesJSON" optional="YES" attributeType="String"/>
+        <attribute name="topTheme" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="TaskItem" representedClassName="TaskItem" syncable="YES" codeGenerationType="class">
+        <attribute name="completedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dueDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="isCompleted" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="sourceKind" optional="YES" attributeType="String"/>
+        <attribute name="title" attributeType="String"/>
+        <relationship name="sourceDecision" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Decision" inverseName="tasks" inverseEntity="Decision"/>
+        <relationship name="sourceDump" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BrainDump"/>
+        <relationship name="sourceExtraction" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ExtractedItem" inverseName="linkedTask" inverseEntity="ExtractedItem"/>
+    </entity>
+    <entity name="UserSettings" representedClassName="UserSettings" syncable="YES" codeGenerationType="class">
+        <attribute name="checkInDismissedDayStamp" optional="YES" attributeType="String"/>
+        <attribute name="cloudSyncEnabled" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="notificationsEnabled" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="preferredInputMode" attributeType="String" defaultValueString="text"/>
+        <attribute name="reminderHour" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="reminderMinute" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
 </model>

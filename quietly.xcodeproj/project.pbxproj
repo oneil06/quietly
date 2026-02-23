@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F877ADB12F4A3FD600496D76 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = F877ADB02F4A3FD600496D76 /* Models.swift */; };
+		F877ADB32F4A3FDD00496D76 /* ClarityApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F877ADB22F4A3FDD00496D76 /* ClarityApp.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		F877AD942F4A3A1000496D76 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +32,8 @@
 		F877AD812F4A3A0F00496D76 /* quietly.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = quietly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F877AD932F4A3A1000496D76 /* quietlyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = quietlyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F877AD9D2F4A3A1000496D76 /* quietlyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = quietlyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F877ADB02F4A3FD600496D76 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		F877ADB22F4A3FDD00496D76 /* ClarityApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClarityApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +86,8 @@
 				F877AD962F4A3A1000496D76 /* quietlyTests */,
 				F877ADA02F4A3A1000496D76 /* quietlyUITests */,
 				F877AD822F4A3A0F00496D76 /* Products */,
+				F877ADB02F4A3FD600496D76 /* Models.swift */,
+				F877ADB22F4A3FDD00496D76 /* ClarityApp.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -236,6 +245,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F877ADB32F4A3FDD00496D76 /* ClarityApp.swift in Sources */,
+				F877ADB12F4A3FD600496D76 /* Models.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
