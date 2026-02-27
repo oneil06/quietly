@@ -48,8 +48,8 @@ struct ClearView: View {
     
     var body: some View {
         ZStack {
-            // MARK: - Background: Solid Blue
-            QuietlyColors.quietBackground
+            // MARK: - Background: Light Gray
+            QuietlyColors.quietPageBackground
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -57,13 +57,13 @@ struct ClearView: View {
                 
                 // MARK: - Header Section
                 VStack(spacing: 8) {
-                    Text("Quiet Your Mind")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(QuietlyColors.headerText)
+                    Text("Quietly")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundColor(QuietlyColors.quietPageBlue)
                     
-                    Text("by writing or talking it out")
+                    Text("Your Thoughts, Organized Quietly.")
                         .font(.system(size: 15, weight: .light))
-                        .foregroundColor(QuietlyColors.headerText)
+                        .foregroundColor(QuietlyColors.quietPageBlue)
                 }
                 .padding(.bottom, 24)
                 
@@ -127,14 +127,10 @@ struct ClearView: View {
                 }
             } label: {
                 Text("Write")
-                    .font(.system(size: 16, weight: inputMode == .write ? .heavy : .semibold))
-                    .foregroundColor(.white)
+                    .font(.system(size: 16, weight: inputMode == .write ? .bold : .regular))
+                    .foregroundColor(QuietlyColors.quietPageBlue)
                     .frame(maxWidth: .infinity)
                     .frame(height: 38)
-                    .background(
-                        RoundedRectangle(cornerRadius: 19)
-                            .fill(inputMode == .write ? QuietlyColors.segmentedSelected : Color.clear)
-                    )
             }
             .buttonStyle(.plain)
             
@@ -145,20 +141,26 @@ struct ClearView: View {
                 }
             } label: {
                 Text("Talk")
-                    .font(.system(size: 16, weight: inputMode == .talk ? .heavy : .semibold))
-                    .foregroundColor(.white)
+                    .font(.system(size: 16, weight: inputMode == .talk ? .bold : .regular))
+                    .foregroundColor(QuietlyColors.quietPageBlue)
                     .frame(maxWidth: .infinity)
                     .frame(height: 38)
-                    .background(
-                        RoundedRectangle(cornerRadius: 19)
-                            .fill(inputMode == .talk ? QuietlyColors.segmentedSelected : Color.clear)
-                    )
             }
             .buttonStyle(.plain)
         }
         .frame(height: 44)
-        .background(QuietlyColors.segmentedBackground)
-        .cornerRadius(22)
+        .overlay(
+            HStack {
+                Rectangle()
+                    .fill(QuietlyColors.quietPageBlue)
+                    .frame(width: inputMode == .write ? 80 : 0, height: 2)
+                Spacer()
+                Rectangle()
+                    .fill(QuietlyColors.quietPageBlue.opacity(0.2))
+                    .frame(width: inputMode == .talk ? 80 : 0, height: 2)
+            }
+            .frame(height: 44, alignment: .bottom)
+        )
     }
     
     // MARK: - Input Card
@@ -172,8 +174,12 @@ struct ClearView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: inputCardHeight)
-        .background(QuietlyColors.inputCardBackground)
+        .background(Color.white)
         .cornerRadius(28)
+        .overlay(
+            RoundedRectangle(cornerRadius: 28)
+                .stroke(QuietlyColors.quietPageBlue, lineWidth: 2)
+        )
     }
     
     private let inputCardHeight: CGFloat = 400
@@ -183,14 +189,14 @@ struct ClearView: View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: $inputText)
                 .scrollContentBackground(.hidden)
-                .foregroundColor(Color(red: 0.2, green: 0.25, blue: 0.3))
+                .foregroundColor(QuietlyColors.cardTextDark)
                 .font(.system(size: 17, weight: .medium))
                 .padding(20)
             
             if inputText.isEmpty {
                 Text("What's on your mind?")
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(QuietlyColors.placeholderText)
+                    .foregroundColor(QuietlyColors.quietPageBlue.opacity(0.4))
                     .padding(24)
                     .allowsHitTesting(false)
             }
@@ -207,11 +213,11 @@ struct ClearView: View {
                     
                     ZStack {
                         Circle()
-                            .stroke(Color(red: 0.81, green: 0.05, blue: 0.13), lineWidth: 1.5)
+                            .stroke(QuietlyColors.quietPageBlue, lineWidth: 2)
                             .frame(width: 120, height: 120)
                         
                         Circle()
-                            .fill(Color(red: 0.81, green: 0.05, blue: 0.13))
+                            .fill(QuietlyColors.quietPageBlue)
                             .frame(width: 100, height: 100)
                         
                         Image(systemName: "mic.fill")
@@ -221,7 +227,7 @@ struct ClearView: View {
                     
                     Text("Tap to Record")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(Color(red: 0.51, green: 0.58, blue: 0.65))
+                        .foregroundColor(QuietlyColors.quietPageBlue)
                     
                     Spacer()
                 }
@@ -235,7 +241,7 @@ struct ClearView: View {
                 VStack(spacing: 20) {
                     Text(isPaused ? "Paused" : "Recording...")
                         .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(Color(red: 0.51, green: 0.58, blue: 0.65))
+                        .foregroundColor(QuietlyColors.quietPageBlue)
                     
                     // Audio visualization
                     HStack(spacing: 2) {
@@ -251,12 +257,12 @@ struct ClearView: View {
                             togglePause()
                         } label: {
                             Circle()
-                                .fill(Color(red: 0.83, green: 0.84, blue: 0.92))
+                                .fill(QuietlyColors.quietPageBlue.opacity(0.2))
                                 .frame(width: 80, height: 80)
                                 .overlay(
                                     Image(systemName: isPaused ? "play.fill" : "pause.fill")
                                         .font(.system(size: 24))
-                                        .foregroundColor(Color(red: 0.51, green: 0.58, blue: 0.65))
+                                        .foregroundColor(QuietlyColors.quietPageBlue)
                                 )
                         }
                         
@@ -265,7 +271,7 @@ struct ClearView: View {
                         } label: {
                             ZStack {
                                 Circle()
-                                    .fill(Color(red: 0, green: 0.35, blue: 0.94))
+                                    .fill(QuietlyColors.quietPageBlue)
                                     .frame(width: 100, height: 100)
                                 
                                 Rectangle()
@@ -288,10 +294,10 @@ struct ClearView: View {
         
         var body: some View {
             Rectangle()
-                .fill(Color(red: 0, green: 0.35, blue: 0.94))
+                .fill(QuietlyColors.quietPageBlue)
                 .frame(width: 7, height: height)
                 .animation(
-                    isActive ? 
+                    isActive ?
                         Animation.easeInOut(duration: 0.3).repeatForever(autoreverses: true)
                         : Animation.linear(duration: 0.3),
                     value: height
@@ -436,7 +442,7 @@ struct ClearView: View {
             if !entitlements.isPro && entitlements.canProcessToday {
                 Text("\(entitlements.remainingProcesses) clear remaining today")
                     .font(.system(size: 12, weight: .light))
-                    .foregroundColor(.white.opacity(0.5))
+                    .foregroundColor(QuietlyColors.quietPageBlue.opacity(0.6))
             }
             
             Button {
@@ -444,7 +450,7 @@ struct ClearView: View {
             } label: {
                 Text("AI Analysis")
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(QuietlyColors.buttonBlueText)
+                    .foregroundColor(QuietlyColors.quietPageBlue)
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
                     .background(QuietlyColors.buttonGreenBackground)

@@ -59,6 +59,10 @@ struct QuietlyColors {
     static let paragraphLight = Color(hex: "#E5E9FF")
     static let cardBackground = Color(hex: "#E5E9FF")
     static let cardTextDark = Color(hex: "#2B2B2B")
+    
+    // MARK: - Quiet Page Design Tokens
+    static let quietPageBlue = Color(hex: "#001DDE")
+    static let quietPageBackground = Color(red: 0.95, green: 0.95, blue: 0.95)
 }
 
 // MARK: - Color Extension for Hex Support
