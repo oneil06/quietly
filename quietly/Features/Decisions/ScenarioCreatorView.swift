@@ -26,49 +26,61 @@ struct ScenarioCreatorView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Mode Picker
-                Picker("Mode", selection: $mode) {
-                    ForEach(CreatorMode.allCases, id: \.self) { m in
-                        Text(m.rawValue).tag(m)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, QuietlySpacing.outerPadding)
-                .padding(.top, 16)
+            ZStack {
+                QuietlyColors.appBlue
+                    .ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(spacing: 16) {
-                        if mode == .split {
-                            splitModeView
-                        } else {
-                            explainModeView
+                VStack(spacing: 0) {
+                    // Mode Picker
+                    Picker("Mode", selection: $mode) {
+                        ForEach(CreatorMode.allCases, id: \.self) { m in
+                            Text(m.rawValue).tag(m)
+                                .foregroundColor(QuietlyColors.cardTextDark)
                         }
-                        
-                        // Analyze Button
-                        Button(action: createDecision) {
-                            Text("Analyze")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(canCreate ? Color.accentColor : Color.gray)
-                                .cornerRadius(12)
-                        }
-                        .disabled(!canCreate)
-                        .padding(.top, 8)
                     }
+                    .pickerStyle(.segmented)
                     .padding(.horizontal, QuietlySpacing.outerPadding)
                     .padding(.top, 16)
+                    
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            // Content Card Container
+                            VStack(spacing: 16) {
+                                if mode == .split {
+                                    splitModeView
+                                } else {
+                                    explainModeView
+                                }
+                            }
+                            .padding(QuietlySpacing.cardPadding)
+                            .background(QuietlyColors.cardBackground)
+                            .cornerRadius(20)
+                            
+                            // Analyze Button
+                            Button(action: createDecision) {
+                                Text("Analyze")
+                                    .font(.headline)
+                                    .foregroundColor(QuietlyColors.headingWhite)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(canCreate ? QuietlyColors.appBlue : Color.gray)
+                                    .cornerRadius(12)
+                            }
+                            .disabled(!canCreate)
+                            .padding(.top, 8)
+                        }
+                        .padding(.horizontal, QuietlySpacing.outerPadding)
+                        .padding(.top, 16)
+                    }
                 }
             }
-            .background(QuietlyColors.background)
             .navigationTitle("New Decision")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .foregroundColor(QuietlyColors.headingWhite)
                 }
             }
             .sheet(isPresented: $showPaywall) {
@@ -82,22 +94,24 @@ struct ScenarioCreatorView: View {
         VStack(spacing: 12) {
             TextField("Option A", text: $optionA, axis: .vertical)
                 .textFieldStyle(.plain)
-                .padding(QuietlySpacing.cardPadding)
-                .background(QuietlyColors.cardFill)
-                .cornerRadius(12)
+                .padding(12)
+                .background(Color.white.opacity(0.6))
+                .cornerRadius(10)
+                .foregroundColor(QuietlyColors.cardTextDark)
                 .lineLimit(3...6)
                 .minimumScaleFactor(0.8)
             
             Text("OR")
                 .font(.headline)
-                .foregroundColor(.secondary)
+                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                 .padding(.vertical, 8)
             
             TextField("Option B", text: $optionB, axis: .vertical)
                 .textFieldStyle(.plain)
-                .padding(QuietlySpacing.cardPadding)
-                .background(QuietlyColors.cardFill)
-                .cornerRadius(12)
+                .padding(12)
+                .background(Color.white.opacity(0.6))
+                .cornerRadius(10)
+                .foregroundColor(QuietlyColors.cardTextDark)
                 .lineLimit(3...6)
                 .minimumScaleFactor(0.8)
         }
@@ -108,12 +122,14 @@ struct ScenarioCreatorView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Describe your situation")
                 .font(QuietlyTypography.sectionHeader)
+                .foregroundColor(QuietlyColors.cardTextDark)
             
             TextField("What's on your mind?", text: $explanation, axis: .vertical)
                 .textFieldStyle(.plain)
-                .padding(QuietlySpacing.cardPadding)
-                .background(QuietlyColors.cardFill)
-                .cornerRadius(12)
+                .padding(12)
+                .background(Color.white.opacity(0.6))
+                .cornerRadius(10)
+                .foregroundColor(QuietlyColors.cardTextDark)
                 .lineLimit(6...12)
                 .minimumScaleFactor(0.7)
         }
