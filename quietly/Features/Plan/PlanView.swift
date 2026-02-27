@@ -32,10 +32,11 @@ struct PlanView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Plan")
                             .font(QuietlyTypography.title)
+                            .foregroundColor(QuietlyColors.headingWhite)
                         
                         Text("Your action items.")
                             .font(QuietlyTypography.body)
-                            .foregroundColor(QuietlyColors.secondaryText)
+                            .foregroundColor(QuietlyColors.paragraphLight)
                     }
                     
                     Spacer()
@@ -43,7 +44,7 @@ struct PlanView: View {
                     Button(action: { showAddTask = true }) {
                         Image(systemName: "plus")
                             .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(QuietlyColors.headingWhite)
                     }
                 }
                 .padding(.horizontal, QuietlySpacing.outerPadding)
@@ -90,19 +91,19 @@ struct PlanView: View {
             Button(action: { completeTask(task) }) {
                 Image(systemName: "circle")
                     .font(.title3)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
             }
             .buttonStyle(.plain)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(task.title ?? "Untitled")
                     .font(QuietlyTypography.body)
-                    .foregroundColor(.primary)
+                    .foregroundColor(QuietlyColors.cardTextDark)
                 
                 if let dueDate = task.dueDate {
                     Text("Due \(dueDate.formatted(date: .abbreviated, time: .omitted))")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                 }
             }
             
@@ -111,15 +112,15 @@ struct PlanView: View {
             if let sourceKind = task.sourceKind {
                 Text(sourceKind)
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.7))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
-                    .background(Color.secondary.opacity(0.1))
+                    .background(QuietlyColors.cardTextDark.opacity(0.1))
                     .cornerRadius(4)
             }
         }
         .padding(QuietlySpacing.cardPadding)
-        .background(QuietlyColors.cardFill)
+        .background(QuietlyColors.cardBackground)
         .cornerRadius(12)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(task.title ?? "Untitled"), tap to complete")
@@ -130,17 +131,17 @@ struct PlanView: View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title3)
-                .foregroundColor(.green)
+                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
             
             Text(task.title ?? "Untitled")
                 .font(QuietlyTypography.body)
-                .foregroundColor(.secondary)
+                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                 .strikethrough()
             
             Spacer()
         }
         .padding(QuietlySpacing.cardPadding)
-        .background(QuietlyColors.cardFill.opacity(0.5))
+        .background(QuietlyColors.cardBackground.opacity(0.7))
         .cornerRadius(12)
     }
     
@@ -149,16 +150,16 @@ struct PlanView: View {
         VStack(spacing: 12) {
             Image(systemName: "checklist")
                 .font(.largeTitle)
-                .foregroundColor(.secondary)
+                .foregroundColor(QuietlyColors.paragraphLight)
             
             Text("No tasks yet")
                 .font(QuietlyTypography.body)
-                .foregroundColor(QuietlyColors.secondaryText)
+                .foregroundColor(QuietlyColors.paragraphLight)
             
             Button(action: { showAddTask = true }) {
                 Text("Add a task")
                     .font(.callout)
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(QuietlyColors.paragraphLight)
             }
         }
         .padding(32)
@@ -214,7 +215,7 @@ struct AddTaskView: View {
     }
     
     private func saveTask() {
-        let task = PersistenceController.shared.createTask(
+        _ = PersistenceController.shared.createTask(
             title: title,
             notes: notes.isEmpty ? nil : notes
         )

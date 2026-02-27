@@ -52,6 +52,13 @@ struct QuietlyColors {
     static let inputTextPlaceholder = Color(hex: "6B7280")
     static let tabbarBackground = Color(hex: "1E3AFA")
     static let segmentedBorder = Color.white.opacity(0.15)
+    
+    // MARK: - New Design System Tokens (Light Card System)
+    static let appBlue = Color(hex: "#0222F9")
+    static let headingWhite = Color.white
+    static let paragraphLight = Color(hex: "#E5E9FF")
+    static let cardBackground = Color(hex: "#E5E9FF")
+    static let cardTextDark = Color(hex: "#2B2B2B")
 }
 
 // MARK: - Color Extension for Hex Support
@@ -123,6 +130,7 @@ struct SectionHeader: View {
         HStack {
             Text(title)
                 .font(QuietlyTypography.sectionHeader)
+                .foregroundColor(QuietlyColors.headingWhite)
             Spacer()
         }
         .padding(.horizontal, QuietlySpacing.outerPadding)

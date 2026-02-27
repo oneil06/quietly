@@ -93,10 +93,11 @@ struct DecisionsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Decisions")
                     .font(QuietlyTypography.title)
+                    .foregroundColor(QuietlyColors.headingWhite)
                 
                 Text("Close the loops.")
                     .font(QuietlyTypography.body)
-                    .foregroundColor(QuietlyColors.secondaryText)
+                    .foregroundColor(QuietlyColors.paragraphLight)
             }
             
             Spacer()
@@ -104,7 +105,7 @@ struct DecisionsView: View {
             Button(action: { showScenarioCreator = true }) {
                 Image(systemName: "plus")
                     .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(QuietlyColors.headingWhite)
             }
         }
         .padding(.horizontal, QuietlySpacing.outerPadding)
@@ -123,14 +124,14 @@ struct DecisionsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(decision.question ?? "Untitled")
                     .font(QuietlyTypography.body)
-                    .foregroundColor(.primary)
+                    .foregroundColor(QuietlyColors.cardTextDark)
                     .lineLimit(2)
                 
                 HStack {
                     if decision.optionA != nil || decision.optionB != nil {
                         Text("Has options")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                     }
                     
                     Spacer()
@@ -138,16 +139,16 @@ struct DecisionsView: View {
                     if decision.isLockedPreview && !entitlements.isPro {
                         Image(systemName: "lock.fill")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                     } else {
                         Text("Needs attention")
                             .font(.caption)
-                            .foregroundColor(.orange)
+                            .foregroundColor(QuietlyColors.cardTextDark.opacity(0.7))
                     }
                 }
             }
             .padding(QuietlySpacing.cardPadding)
-            .background(QuietlyColors.cardFill)
+            .background(QuietlyColors.cardBackground)
             .cornerRadius(12)
         }
         .buttonStyle(.plain)
@@ -162,17 +163,17 @@ struct DecisionsView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(decision.question ?? "Untitled")
                     .font(QuietlyTypography.body)
-                    .foregroundColor(.primary)
+                    .foregroundColor(QuietlyColors.cardTextDark)
                     .lineLimit(2)
                 
                 if let resolvedAt = decision.resolvedAt {
                     Text("Resolved \(resolvedAt.formatted(date: .abbreviated, time: .omitted))")
                         .font(.caption)
-                        .foregroundColor(QuietlyColors.secondaryText)
+                        .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                 }
             }
             .padding(QuietlySpacing.cardPadding)
-            .background(QuietlyColors.cardFill)
+            .background(QuietlyColors.cardBackground.opacity(0.8))
             .cornerRadius(12)
         }
         .buttonStyle(.plain)
@@ -183,17 +184,17 @@ struct DecisionsView: View {
         VStack(spacing: 12) {
             Image(systemName: "circle.hexagonpath")
                 .font(.largeTitle)
-                .foregroundColor(.secondary)
+                .foregroundColor(QuietlyColors.paragraphLight)
             
             Text(selectedSegment == .active ? "No active decisions" : "No archived decisions")
                 .font(QuietlyTypography.body)
-                .foregroundColor(QuietlyColors.secondaryText)
+                .foregroundColor(QuietlyColors.paragraphLight)
             
             if selectedSegment == .active {
                 Button(action: { showScenarioCreator = true }) {
                     Text("Create a decision")
                         .font(.callout)
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(QuietlyColors.paragraphLight)
                 }
             }
         }

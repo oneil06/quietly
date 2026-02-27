@@ -28,9 +28,10 @@ struct DecisionDetailView: View {
                     Text(decision.question ?? "Untitled")
                         .font(.title3)
                         .fontWeight(.medium)
+                        .foregroundColor(QuietlyColors.cardTextDark)
                         .padding(QuietlySpacing.cardPadding)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(QuietlyColors.cardFill)
+                        .background(QuietlyColors.cardBackground)
                         .cornerRadius(12)
                 }
                 
@@ -52,9 +53,10 @@ struct DecisionDetailView: View {
                         
                         Text(optionA)
                             .font(QuietlyTypography.body)
+                            .foregroundColor(QuietlyColors.cardTextDark)
                             .padding(QuietlySpacing.cardPadding)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(QuietlyColors.cardFill)
+                            .background(QuietlyColors.cardBackground)
                             .cornerRadius(12)
                     }
                 }
@@ -66,9 +68,10 @@ struct DecisionDetailView: View {
                         
                         Text(optionB)
                             .font(QuietlyTypography.body)
+                            .foregroundColor(QuietlyColors.cardTextDark)
                             .padding(QuietlySpacing.cardPadding)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(QuietlyColors.cardFill)
+                            .background(QuietlyColors.cardBackground)
                             .cornerRadius(12)
                     }
                 }
@@ -80,10 +83,10 @@ struct DecisionDetailView: View {
                         
                         Text(decision.suggestedNextStep ?? "No suggestion available")
                             .font(QuietlyTypography.body)
-                            .foregroundColor(QuietlyColors.secondaryText)
+                            .foregroundColor(QuietlyColors.cardTextDark)
                             .padding(QuietlySpacing.cardPadding)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(QuietlyColors.cardFill)
+                            .background(QuietlyColors.cardBackground)
                             .cornerRadius(12)
                     }
                 }
@@ -98,10 +101,10 @@ struct DecisionDetailView: View {
                     Button(action: markAsResolved) {
                         Text("Mark as Resolved")
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(QuietlyColors.headingWhite)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color.accentColor)
+                            .background(QuietlyColors.appBlue)
                             .cornerRadius(12)
                     }
                     .padding(.top, 8)
@@ -112,10 +115,10 @@ struct DecisionDetailView: View {
                     Button(action: reopenDecision) {
                         Text("Reopen Decision")
                             .font(.headline)
-                            .foregroundColor(.accentColor)
+                            .foregroundColor(QuietlyColors.cardTextDark)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(QuietlyColors.cardFill)
+                            .background(QuietlyColors.cardBackground)
                             .cornerRadius(12)
                     }
                     .padding(.top, 8)
@@ -125,7 +128,7 @@ struct DecisionDetailView: View {
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
-        .background(QuietlyColors.background)
+        .background(QuietlyColors.pageBackground)
         .navigationTitle("Decision")
         .sheet(isPresented: $showPaywall) {
             PaywallView()
@@ -138,14 +141,17 @@ struct DecisionDetailView: View {
             // Sample analysis - in production this would come from extraction
             Text("• Consider the long-term implications")
                 .font(QuietlyTypography.body)
+                .foregroundColor(QuietlyColors.cardTextDark)
             Text("• Think about your current priorities")
                 .font(QuietlyTypography.body)
+                .foregroundColor(QuietlyColors.cardTextDark)
             Text("• Trust your gut feeling")
                 .font(QuietlyTypography.body)
+                .foregroundColor(QuietlyColors.cardTextDark)
         }
         .padding(QuietlySpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(QuietlyColors.cardFill)
+        .background(QuietlyColors.cardBackground)
         .cornerRadius(12)
     }
     
@@ -155,32 +161,32 @@ struct DecisionDetailView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("• Consider the trade-offs")
                     .font(QuietlyTypography.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                 Text("• Think about timing")
                     .font(QuietlyTypography.body)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
             }
             .blur(radius: 3)
             .padding(QuietlySpacing.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(QuietlyColors.cardFill)
+            .background(QuietlyColors.cardBackground)
             .cornerRadius(12)
             
             VStack(spacing: 8) {
                 Image(systemName: "lock.fill")
                     .font(.title2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(QuietlyColors.cardTextDark)
                 Text("Unlock Pro to see analysis")
                     .font(.callout)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(QuietlyColors.cardTextDark)
                 Button("Unlock Pro") {
                     showPaywall = true
                 }
                 .font(.callout)
-                .foregroundColor(.accentColor)
+                .foregroundColor(QuietlyColors.appBlue)
             }
             .padding(24)
-            .background(Color.white.opacity(0.9))
+            .background(QuietlyColors.cardBackground)
             .cornerRadius(12)
         }
     }
@@ -190,14 +196,15 @@ struct DecisionDetailView: View {
         VStack(spacing: 8) {
             Image(systemName: "lightbulb")
                 .font(.title2)
-                .foregroundColor(.accentColor)
+                .foregroundColor(QuietlyColors.cardTextDark)
             
             Text("Remember…")
                 .font(.headline)
+                .foregroundColor(QuietlyColors.cardTextDark)
             
             Text("Most decisions aren't permanent. You can adjust your path as you learn more.")
                 .font(QuietlyTypography.body)
-                .foregroundColor(QuietlyColors.secondaryText)
+                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.8))
                 .multilineTextAlignment(.center)
         }
         .padding(20)

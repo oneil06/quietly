@@ -23,10 +23,11 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Settings")
                         .font(QuietlyTypography.title)
+                        .foregroundColor(QuietlyColors.headingWhite)
                     
                     Text("Manage your preferences.")
                         .font(QuietlyTypography.body)
-                        .foregroundColor(QuietlyColors.secondaryText)
+                        .foregroundColor(QuietlyColors.paragraphLight)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, QuietlySpacing.outerPadding)
@@ -40,42 +41,45 @@ struct SettingsView: View {
                         VStack(spacing: 8) {
                             HStack {
                                 Label("Plan", systemImage: "sparkles")
+                                    .foregroundColor(QuietlyColors.cardTextDark)
                                 Spacer()
                                 Text(entitlements.isPro ? "Pro" : "Free")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                             }
                             .padding(QuietlySpacing.cardPadding)
-                            .background(QuietlyColors.cardFill)
+                            .background(QuietlyColors.cardBackground)
                             .cornerRadius(12)
                             
                             if entitlements.isPro {
                                 Button(action: {}) {
                                     HStack {
                                         Label("Manage subscription", systemImage: "creditcard")
+                                            .foregroundColor(QuietlyColors.cardTextDark)
                                         Spacer()
                                         Image(systemName: "chevron.right")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                                     }
                                     .padding(QuietlySpacing.cardPadding)
-                                    .background(QuietlyColors.cardFill)
+                                    .background(QuietlyColors.cardBackground)
                                     .cornerRadius(12)
                                 }
-                                .foregroundColor(.primary)
+                                .foregroundColor(QuietlyColors.cardTextDark)
                             } else {
                                 Button(action: { showPaywall = true }) {
                                     HStack {
                                         Label("Upgrade", systemImage: "arrow.up.circle")
+                                            .foregroundColor(QuietlyColors.cardTextDark)
                                         Spacer()
                                         Image(systemName: "chevron.right")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                                     }
                                     .padding(QuietlySpacing.cardPadding)
-                                    .background(QuietlyColors.cardFill)
+                                    .background(QuietlyColors.cardBackground)
                                     .cornerRadius(12)
                                 }
-                                .foregroundColor(.primary)
+                                .foregroundColor(QuietlyColors.cardTextDark)
                             }
                         }
                     }
@@ -89,17 +93,19 @@ struct SettingsView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Data Storage")
                                         .font(.body)
+                                        .foregroundColor(QuietlyColors.cardTextDark)
                                     Text("Stored locally by default. Cloud sync is optional.")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                                 }
                             }
                             .padding(QuietlySpacing.cardPadding)
-                            .background(QuietlyColors.cardFill)
+                            .background(QuietlyColors.cardBackground)
                             .cornerRadius(12)
-                            
+                             
                             HStack {
                                 Label("Cloud Sync", systemImage: "icloud")
+                                    .foregroundColor(QuietlyColors.cardTextDark)
                                 Spacer()
                                 if entitlements.isPro {
                                     Toggle("", isOn: $cloudSyncEnabled)
@@ -109,31 +115,34 @@ struct SettingsView: View {
                                         HStack(spacing: 4) {
                                             Image(systemName: "lock.fill")
                                                 .font(.caption)
+                                                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                                             Text("Pro")
                                                 .font(.caption)
+                                                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                                         }
-                                        .foregroundColor(.secondary)
                                     }
                                 }
                             }
                             .padding(QuietlySpacing.cardPadding)
-                            .background(QuietlyColors.cardFill)
+                            .background(QuietlyColors.cardBackground)
                             .cornerRadius(12)
                             
                             Button(action: exportData) {
                                 Label("Export data", systemImage: "square.and.arrow.up")
+                                    .foregroundColor(QuietlyColors.cardTextDark)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(QuietlySpacing.cardPadding)
-                                    .background(QuietlyColors.cardFill)
+                                    .background(QuietlyColors.cardBackground)
                                     .cornerRadius(12)
                             }
-                            .foregroundColor(.primary)
+                            .foregroundColor(QuietlyColors.cardTextDark)
                             
                             Button(role: .destructive, action: { showDeleteConfirmation = true }) {
                                 Label("Delete all data", systemImage: "trash")
+                                    .foregroundColor(QuietlyColors.cardTextDark)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(QuietlySpacing.cardPadding)
-                                    .background(QuietlyColors.cardFill)
+                                    .background(QuietlyColors.cardBackground)
                                     .cornerRadius(12)
                             }
                             .foregroundColor(.red)
@@ -146,12 +155,13 @@ struct SettingsView: View {
                         
                         HStack {
                             Label("Daily check-in reminder", systemImage: "bell")
+                                .foregroundColor(QuietlyColors.cardTextDark)
                             Spacer()
                             Toggle("", isOn: $notificationsEnabled)
                                 .labelsHidden()
                         }
                         .padding(QuietlySpacing.cardPadding)
-                        .background(QuietlyColors.cardFill)
+                        .background(QuietlyColors.cardBackground)
                         .cornerRadius(12)
                     }
                     
@@ -162,31 +172,34 @@ struct SettingsView: View {
                         VStack(spacing: 8) {
                             HStack {
                                 Label("Version", systemImage: "info.circle")
+                                    .foregroundColor(QuietlyColors.cardTextDark)
                                 Spacer()
                                 Text("1.0.0")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                             }
                             .padding(QuietlySpacing.cardPadding)
-                            .background(QuietlyColors.cardFill)
+                            .background(QuietlyColors.cardBackground)
                             .cornerRadius(12)
                             
                             Link(destination: URL(string: "https://quietly.app/privacy")!) {
                                 Label("Privacy Policy", systemImage: "hand.raised")
+                                    .foregroundColor(QuietlyColors.cardTextDark)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(QuietlySpacing.cardPadding)
-                                    .background(QuietlyColors.cardFill)
+                                    .background(QuietlyColors.cardBackground)
                                     .cornerRadius(12)
                             }
-                            .foregroundColor(.primary)
+                            .foregroundColor(QuietlyColors.cardTextDark)
                             
                             Link(destination: URL(string: "https://quietly.app/terms")!) {
                                 Label("Terms of Service", systemImage: "doc.text")
+                                    .foregroundColor(QuietlyColors.cardTextDark)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(QuietlySpacing.cardPadding)
-                                    .background(QuietlyColors.cardFill)
+                                    .background(QuietlyColors.cardBackground)
                                     .cornerRadius(12)
                             }
-                            .foregroundColor(.primary)
+                            .foregroundColor(QuietlyColors.cardTextDark)
                         }
                     }
                 }

@@ -35,10 +35,11 @@ struct InsightsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Insights")
                         .font(QuietlyTypography.title)
+                        .foregroundColor(QuietlyColors.headingWhite)
                     
                     Text("Your clarity over time.")
                         .font(QuietlyTypography.body)
-                        .foregroundColor(QuietlyColors.secondaryText)
+                        .foregroundColor(QuietlyColors.paragraphLight)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, QuietlySpacing.outerPadding)
@@ -62,7 +63,7 @@ struct InsightsView: View {
                 // Footer
                 Text("Clarity builds with consistency.")
                     .font(.footnote)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(QuietlyColors.paragraphLight)
                     .padding(.top, 8)
                     .padding(.bottom, 24)
             }
@@ -81,11 +82,11 @@ struct InsightsView: View {
             HStack(alignment: .bottom, spacing: 8) {
                 Text("85")
                     .font(.system(size: 64, weight: .bold, design: .rounded))
-                    .foregroundColor(.accentColor)
+                    .foregroundColor(QuietlyColors.cardTextDark)
                 
                 Text("/ 100")
                     .font(.title3)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                     .padding(.bottom, 8)
                 
                 Spacer()
@@ -93,7 +94,7 @@ struct InsightsView: View {
                 ClarityRing(size: 50, isResolved: true)
             }
             .padding(QuietlySpacing.cardPadding)
-            .background(QuietlyColors.cardFill)
+            .background(QuietlyColors.cardBackground)
             .cornerRadius(12)
         }
         .padding(.horizontal, QuietlySpacing.outerPadding - 4)
@@ -109,7 +110,7 @@ struct InsightsView: View {
                 HStack(alignment: .bottom, spacing: 8) {
                     ForEach([65, 72, 68, 78, 82, 75, 85], id: \.self) { value in
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.accentColor.opacity(Double(value) / 100))
+                            .fill(QuietlyColors.cardTextDark.opacity(Double(value) / 150))
                             .frame(width: 36, height: CGFloat(value))
                     }
                 }
@@ -118,10 +119,10 @@ struct InsightsView: View {
                 
                 Text("Last 7 days")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
             }
             .padding(QuietlySpacing.cardPadding)
-            .background(QuietlyColors.cardFill)
+            .background(QuietlyColors.cardBackground)
             .cornerRadius(12)
         }
         .padding(.horizontal, QuietlySpacing.outerPadding - 4)
@@ -137,13 +138,14 @@ struct InsightsView: View {
                 HStack {
                     Text(sampleThemes[0])
                         .font(QuietlyTypography.body)
+                        .foregroundColor(QuietlyColors.cardTextDark)
                     Spacer()
                     Text("3 times")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                 }
                 .padding(12)
-                .background(Color.accentColor.opacity(0.1))
+                .background(QuietlyColors.cardTextDark.opacity(0.1))
                 .cornerRadius(8)
                 
                 // Additional themes locked for free users
@@ -152,14 +154,14 @@ struct InsightsView: View {
                         HStack {
                             Text(theme)
                                 .font(QuietlyTypography.body)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(QuietlyColors.cardTextDark)
                             Spacer()
                             Text("2 times")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                         }
                         .padding(12)
-                        .background(QuietlyColors.cardFill)
+                        .background(QuietlyColors.cardBackground.opacity(0.5))
                         .cornerRadius(8)
                     }
                 } else {
@@ -168,28 +170,28 @@ struct InsightsView: View {
                         HStack {
                             Text(sampleThemes[1])
                                 .font(QuietlyTypography.body)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(QuietlyColors.cardTextDark)
                             Spacer()
                             Text("2 times")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                         }
                         .padding(12)
-                        .background(QuietlyColors.cardFill)
+                        .background(QuietlyColors.cardBackground.opacity(0.5))
                         .cornerRadius(8)
                         .blur(radius: 2)
                         
                         HStack {
                             Text(sampleThemes[2])
                                 .font(QuietlyTypography.body)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(QuietlyColors.cardTextDark)
                             Spacer()
                             Text("1 time")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                         }
                         .padding(12)
-                        .background(QuietlyColors.cardFill)
+                        .background(QuietlyColors.cardBackground.opacity(0.5))
                         .cornerRadius(8)
                         .blur(radius: 2)
                     }
@@ -197,16 +199,17 @@ struct InsightsView: View {
                     Button(action: { showPaywall = true }) {
                         HStack {
                             Image(systemName: "lock.fill")
+                                .foregroundColor(QuietlyColors.cardTextDark)
                             Text("See full pattern history with Pro")
+                                .foregroundColor(QuietlyColors.cardTextDark)
                         }
                         .font(.callout)
-                        .foregroundColor(.accentColor)
                     }
                     .padding(.top, 4)
                 }
             }
             .padding(QuietlySpacing.cardPadding)
-            .background(QuietlyColors.cardFill)
+            .background(QuietlyColors.cardBackground)
             .cornerRadius(12)
         }
         .padding(.horizontal, QuietlySpacing.outerPadding - 4)
@@ -221,21 +224,21 @@ struct InsightsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(resolvedDecisions.count)")
                         .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(QuietlyColors.cardTextDark)
                     
                     Text("this week")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
                 }
                 
                 Spacer()
                 
                 Image(systemName: "checkmark.seal.fill")
                     .font(.largeTitle)
-                    .foregroundColor(.green.opacity(0.7))
+                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
             }
             .padding(QuietlySpacing.cardPadding)
-            .background(QuietlyColors.cardFill)
+            .background(QuietlyColors.cardBackground)
             .cornerRadius(12)
         }
         .padding(.horizontal, QuietlySpacing.outerPadding - 4)
@@ -248,9 +251,9 @@ struct InsightsView: View {
             
             Text("You've made great progress this week. Your clarity score has improved by 12 points, and you've resolved 5 decisions. Keep up the consistent practice of clearing your mind daily.")
                 .font(QuietlyTypography.body)
-                .foregroundColor(QuietlyColors.secondaryText)
+                .foregroundColor(QuietlyColors.cardTextDark)
                 .padding(QuietlySpacing.cardPadding)
-                .background(QuietlyColors.cardFill)
+                .background(QuietlyColors.cardBackground)
                 .cornerRadius(12)
         }
         .padding(.horizontal, QuietlySpacing.outerPadding - 4)
