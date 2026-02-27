@@ -69,9 +69,8 @@ struct PaywallView: View {
                 .padding(.bottom, 32)
             }
             .background(QuietlyColors.background.ignoresSafeArea())
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark")
                             .foregroundColor(.secondary)

@@ -55,9 +55,10 @@ struct ResultsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Here's what surfaced.")
                             .font(.title3.weight(.semibold))
+                            .foregroundColor(.white)
                         Text("Nothing added. Just organized.")
                             .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .foregroundColor(.white.opacity(0.7))
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -239,10 +240,9 @@ struct ResultsView: View {
                 }
                 .padding(.bottom, 32)
             }
-            .background(QuietlyColors.background)
-            .navigationBarTitleDisplayMode(.inline)
+            .background(QuietlyColors.pageBackground)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         onDismiss()
                     }
@@ -276,10 +276,6 @@ struct ResultsView: View {
             
             // Update UI state
             removedTasks.insert(taskText)
-            
-            // Haptic feedback
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.warning)
         }
     }
     

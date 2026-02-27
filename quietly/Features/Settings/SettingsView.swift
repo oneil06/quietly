@@ -193,7 +193,7 @@ struct SettingsView: View {
                 .padding(.horizontal, QuietlySpacing.outerPadding)
             }
         }
-        .background(QuietlyColors.background)
+        .background(QuietlyColors.pageBackground)
         .sheet(isPresented: $showPaywall) {
             PaywallView()
         }

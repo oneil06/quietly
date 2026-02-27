@@ -74,8 +74,7 @@ struct DecisionsView: View {
                     .padding(.bottom, 24)
                 }
             }
-            .background(QuietlyColors.background)
-            .toolbar(.hidden, for: .navigationBar)
+            .background(QuietlyColors.pageBackground)
             .sheet(isPresented: $showScenarioCreator) {
                 ScenarioCreatorView()
             }

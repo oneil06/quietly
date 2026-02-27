@@ -22,10 +22,18 @@ struct ProcessingOverlayView: View {
     
     var body: some View {
         ZStack {
-            // Blur background
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .background(.ultraThinMaterial)
+            // Dark gradient background matching app theme
+            LinearGradient(
+                colors: [
+                    Color(red: 0.05, green: 0.05, blue: 0.15),
+                    Color(red: 0.1, green: 0.05, blue: 0.2),
+                    Color(red: 0.15, green: 0.1, blue: 0.25)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
+            .overlay(Color.black.opacity(0.3))
             
             VStack(spacing: 24) {
                 // Animated Clarity Ring
@@ -36,14 +44,14 @@ struct ProcessingOverlayView: View {
                 )
                 .overlay(
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .accentColor))
+                        .progressViewStyle(CircularProgressViewStyle(tint: QuietlyColors.accent))
                         .scaleEffect(1.2)
                 )
                 
                 // Rotating microcopy
                 Text(messages[currentMessageIndex])
-                    .font(.callout)
-                    .foregroundColor(.white)
+                    .font(.system(size: 17, weight: .light))
+                    .foregroundColor(.white.opacity(0.9))
                     .multilineTextAlignment(.center)
                     .opacity(opacity)
                     .animation(.easeInOut(duration: 0.3), value: opacity)
@@ -51,7 +59,11 @@ struct ProcessingOverlayView: View {
             .padding(40)
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(.ultraThinMaterial)
+                    .fill(Color.white.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                    )
             )
         }
         .onAppear {

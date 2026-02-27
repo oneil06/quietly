@@ -78,7 +78,7 @@ struct PlanView: View {
             }
             .padding(.vertical, 16)
         }
-        .background(QuietlyColors.background)
+        .background(QuietlyColors.pageBackground)
         .sheet(isPresented: $showAddTask) {
             AddTaskView()
         }
@@ -170,10 +170,6 @@ struct PlanView: View {
             task.isCompleted = true
             task.completedAt = Date()
             
-            // Subtle haptic
-            let generator = UIImpactFeedbackGenerator(style: .light)
-            generator.impactOccurred()
-            
             try? viewContext.save()
         }
     }
@@ -200,15 +196,14 @@ struct AddTaskView: View {
                 }
             }
             .navigationTitle("New Task")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         saveTask()
                     }

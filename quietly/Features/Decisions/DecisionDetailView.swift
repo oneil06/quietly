@@ -127,7 +127,6 @@ struct DecisionDetailView: View {
         }
         .background(QuietlyColors.background)
         .navigationTitle("Decision")
-        .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showPaywall) {
             PaywallView()
         }
@@ -181,7 +180,7 @@ struct DecisionDetailView: View {
                 .foregroundColor(.accentColor)
             }
             .padding(24)
-            .background(Color(.systemBackground).opacity(0.9))
+            .background(Color.white.opacity(0.9))
             .cornerRadius(12)
         }
     }

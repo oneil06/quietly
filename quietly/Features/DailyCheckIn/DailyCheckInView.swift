@@ -79,9 +79,8 @@ struct DailyCheckInView: View {
                 .padding(.bottom, 32)
             }
             .background(QuietlyColors.background.ignoresSafeArea())
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button(action: {
                         recordDismissal()
                         onSkip?()

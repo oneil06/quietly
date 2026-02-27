@@ -64,9 +64,8 @@ struct ScenarioCreatorView: View {
             }
             .background(QuietlyColors.background)
             .navigationTitle("New Decision")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }

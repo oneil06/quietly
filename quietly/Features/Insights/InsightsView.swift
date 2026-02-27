@@ -67,7 +67,7 @@ struct InsightsView: View {
                     .padding(.bottom, 24)
             }
         }
-        .background(QuietlyColors.background)
+        .background(QuietlyColors.pageBackground)
         .sheet(isPresented: $showPaywall) {
             PaywallView()
         }
