@@ -235,7 +235,7 @@ struct CustomTabBar: View {
             // Line on top of tab bar
             Rectangle()
                 .frame(height: 0.5)
-                .foregroundColor(QuietlyColors.tabBarBorder)
+                .foregroundColor(Color.gray.opacity(0.3))
             
             HStack(spacing: 0) {
                 ForEach(AppShell.Tab.allCases, id: \.self) { tab in
@@ -255,7 +255,7 @@ struct CustomTabBar: View {
             .padding(.top, 8)
             .padding(.bottom, 24)
         }
-        .background(QuietlyColors.tabBarBackground)
+            .background(Color.white)
         .overlay(
             // Center button on top
             centerTabButton(tab: .quiet),
@@ -269,11 +269,11 @@ struct CustomTabBar: View {
             ZStack {
                 // Circular button
                 Circle()
-                    .fill(QuietlyColors.centerTabButton)
+                    .fill(QuietlyColors.quietPageBlue)
                     .frame(width: 52, height: 52)
                     .overlay(
                         Circle()
-                            .stroke(QuietlyColors.tabBarBorder, lineWidth: 0.5)
+                            .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
                     )
                 
                 // Custom sparkle icon from SVG
@@ -283,7 +283,7 @@ struct CustomTabBar: View {
             }
         }
         .buttonStyle(.plain)
-        .offset(y: 14) // Position the button
+        .offset(y: 11) // Position the button (moved up 3px)
     }
 }
 
@@ -303,10 +303,11 @@ struct TabBarItem: View {
                 Text(tab.rawValue)
                     .font(.system(size: 11, weight: isSelected ? .heavy : .semibold))
             }
-            .foregroundColor(isSelected ? .white : .white.opacity(0.7))
+            .foregroundColor(isSelected ? QuietlyColors.quietPageBlue : QuietlyColors.quietPageBlue.opacity(0.5))
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
+        .offset(x: tab == .settings ? -5 : 0) // Move Settings 5px to the left
     }
 }
 

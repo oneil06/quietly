@@ -74,7 +74,7 @@ struct DecisionsView: View {
                     .padding(.bottom, 24)
                 }
             }
-            .background(QuietlyColors.pageBackground)
+            .background(QuietlyColors.quietPageBackground)
             .sheet(isPresented: $showScenarioCreator) {
                 ScenarioCreatorView()
             }
@@ -93,11 +93,11 @@ struct DecisionsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Decisions")
                     .font(QuietlyTypography.title)
-                    .foregroundColor(QuietlyColors.headingWhite)
+                    .foregroundColor(QuietlyColors.quietPageBlue)
                 
                 Text("Close the loops.")
                     .font(QuietlyTypography.body)
-                    .foregroundColor(QuietlyColors.paragraphLight)
+                    .foregroundColor(QuietlyColors.quietPageBlue.opacity(0.7))
             }
             
             Spacer()
@@ -105,7 +105,7 @@ struct DecisionsView: View {
             Button(action: { showScenarioCreator = true }) {
                 Image(systemName: "plus")
                     .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(QuietlyColors.headingWhite)
+                    .foregroundColor(QuietlyColors.quietPageBlue)
             }
         }
         .padding(.horizontal, QuietlySpacing.outerPadding)

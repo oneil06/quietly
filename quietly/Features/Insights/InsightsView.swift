@@ -35,11 +35,11 @@ struct InsightsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Insights")
                         .font(QuietlyTypography.title)
-                        .foregroundColor(QuietlyColors.headingWhite)
+                        .foregroundColor(QuietlyColors.quietPageBlue)
                     
                     Text("Your clarity over time.")
                         .font(QuietlyTypography.body)
-                        .foregroundColor(QuietlyColors.paragraphLight)
+                        .foregroundColor(QuietlyColors.quietPageBlue.opacity(0.7))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, QuietlySpacing.outerPadding)
@@ -68,7 +68,7 @@ struct InsightsView: View {
                     .padding(.bottom, 24)
             }
         }
-        .background(QuietlyColors.pageBackground)
+        .background(QuietlyColors.quietPageBackground)
         .sheet(isPresented: $showPaywall) {
             PaywallView()
         }

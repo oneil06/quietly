@@ -128,7 +128,7 @@ struct DecisionDetailView: View {
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
-        .background(QuietlyColors.pageBackground)
+        .background(QuietlyColors.quietPageBackground)
         .navigationTitle("Decision")
         .sheet(isPresented: $showPaywall) {
             PaywallView()

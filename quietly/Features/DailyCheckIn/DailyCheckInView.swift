@@ -78,7 +78,7 @@ struct DailyCheckInView: View {
                 .padding(.horizontal, 24)
                 .padding(.bottom, 32)
             }
-            .background(QuietlyColors.background.ignoresSafeArea())
+            .background(QuietlyColors.quietPageBackground.ignoresSafeArea())
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(action: {

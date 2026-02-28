@@ -23,11 +23,11 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Settings")
                         .font(QuietlyTypography.title)
-                        .foregroundColor(QuietlyColors.headingWhite)
+                        .foregroundColor(QuietlyColors.quietPageBlue)
                     
                     Text("Manage your preferences.")
                         .font(QuietlyTypography.body)
-                        .foregroundColor(QuietlyColors.paragraphLight)
+                        .foregroundColor(QuietlyColors.quietPageBlue.opacity(0.7))
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, QuietlySpacing.outerPadding)
@@ -206,7 +206,7 @@ struct SettingsView: View {
                 .padding(.horizontal, QuietlySpacing.outerPadding)
             }
         }
-        .background(QuietlyColors.pageBackground)
+        .background(QuietlyColors.quietPageBackground)
         .sheet(isPresented: $showPaywall) {
             PaywallView()
         }

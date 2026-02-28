@@ -22,11 +22,13 @@ struct SplashView: View {
             VStack(spacing: 0) {
                 Spacer()
                 
-                // Logo image with animation
+                // Logo image with animation (white version for dark background)
                 Image("SplashLogo")
                     .resizable()
+                    .renderingMode(.template)
                     .scaledToFit()
                     .frame(width: 200, height: 200)
+                    .foregroundColor(.white)
                     .scaleEffect(isAnimating ? 1 : 0.8)
                     .opacity(isAnimating ? 1 : 0)
                     .offset(y: isAnimating ? 0 : 20)

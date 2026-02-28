@@ -134,7 +134,7 @@ struct SectionHeader: View {
         HStack {
             Text(title)
                 .font(QuietlyTypography.sectionHeader)
-                .foregroundColor(QuietlyColors.headingWhite)
+                .foregroundColor(QuietlyColors.quietPageBlue)
             Spacer()
         }
         .padding(.horizontal, QuietlySpacing.outerPadding)

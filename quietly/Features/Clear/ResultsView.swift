@@ -240,7 +240,7 @@ struct ResultsView: View {
                 }
                 .padding(.bottom, 32)
             }
-            .background(QuietlyColors.pageBackground)
+            .background(QuietlyColors.quietPageBackground)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {

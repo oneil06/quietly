@@ -24,12 +24,17 @@ struct ClearView: View {
     @State private var showResults: Bool = false
     @State private var showPaywall: Bool = false
     
+    // Processing overlay state
+    @State private var processingCompleted: Bool = false
+    @State private var processingError: String? = nil
+    
     // Extracted results
     @State private var extractionResult: ExtractionResult?
     @State private var currentBrainDump: BrainDump?
     
     // MARK: - UI State for Segmented Control
     @State private var inputMode: InputMode = .write
+    @FocusState private var isTextEditorFocused: Bool
     
     enum InputMode {
         case write
@@ -53,18 +58,18 @@ struct ClearView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                Spacer()
-                
                 // MARK: - Header Section
                 VStack(spacing: 8) {
-                    Text("Quietly")
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(QuietlyColors.quietPageBlue)
+                    Image("SplashLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 48)
                     
                     Text("Your Thoughts, Organized Quietly.")
                         .font(.system(size: 15, weight: .light))
                         .foregroundColor(QuietlyColors.quietPageBlue)
                 }
+                .padding(.top, 16)
                 .padding(.bottom, 24)
                 
                 // MARK: - Segmented Control
@@ -111,8 +116,29 @@ struct ClearView: View {
         }
         .overlay {
             if isProcessing {
-                ProcessingOverlayView()
-                    .transition(.opacity)
+                ProcessingOverlayContainer(
+                    isProcessing: $isProcessing,
+                    processingCompleted: $processingCompleted,
+                    processingError: $processingError,
+                    onComplete: {
+                        // Show results when processing completes
+                        if extractionResult != nil && currentBrainDump != nil {
+                            showResults = true
+                        }
+                    },
+                    onErrorDismiss: {
+                        // Reset error state
+                        processingError = nil
+                        processingCompleted = false
+                    }
+                )
+                .transition(.opacity)
+            }
+        }
+        .onChange(of: processingCompleted) { _, completed in
+            if completed && processingError == nil {
+                // Processing finished successfully, overlay will dismiss itself
+                // and call onComplete to show results
             }
         }
     }
@@ -126,11 +152,19 @@ struct ClearView: View {
                     inputMode = .write
                 }
             } label: {
-                Text("Write")
-                    .font(.system(size: 16, weight: inputMode == .write ? .bold : .regular))
-                    .foregroundColor(QuietlyColors.quietPageBlue)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 38)
+                VStack(spacing: 8) {
+                    Text("Write")
+                        .font(.system(size: 16, weight: inputMode == .write ? .bold : .regular))
+                        .foregroundColor(QuietlyColors.quietPageBlue)
+                    
+                    // Underline
+                    Rectangle()
+                        .fill(inputMode == .write ? QuietlyColors.quietPageBlue : QuietlyColors.quietPageBlue.opacity(0.2))
+                        .frame(width: 175, height: 2)
+                        .offset(x: 2.5)  // Move toward center
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
             }
             .buttonStyle(.plain)
             
@@ -140,27 +174,23 @@ struct ClearView: View {
                     inputMode = .talk
                 }
             } label: {
-                Text("Talk")
-                    .font(.system(size: 16, weight: inputMode == .talk ? .bold : .regular))
-                    .foregroundColor(QuietlyColors.quietPageBlue)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 38)
+                VStack(spacing: 8) {
+                    Text("Talk")
+                        .font(.system(size: 16, weight: inputMode == .talk ? .bold : .regular))
+                        .foregroundColor(QuietlyColors.quietPageBlue)
+                    
+                    // Underline
+                    Rectangle()
+                        .fill(inputMode == .talk ? QuietlyColors.quietPageBlue : QuietlyColors.quietPageBlue.opacity(0.2))
+                        .frame(width: 175, height: 2)
+                        .offset(x: -2.5)  // Move toward center
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 44)
             }
             .buttonStyle(.plain)
         }
         .frame(height: 44)
-        .overlay(
-            HStack {
-                Rectangle()
-                    .fill(QuietlyColors.quietPageBlue)
-                    .frame(width: inputMode == .write ? 80 : 0, height: 2)
-                Spacer()
-                Rectangle()
-                    .fill(QuietlyColors.quietPageBlue.opacity(0.2))
-                    .frame(width: inputMode == .talk ? 80 : 0, height: 2)
-            }
-            .frame(height: 44, alignment: .bottom)
-        )
     }
     
     // MARK: - Input Card
@@ -182,24 +212,30 @@ struct ClearView: View {
         )
     }
     
-    private let inputCardHeight: CGFloat = 400
+    private let inputCardHeight: CGFloat = 440
     
     // MARK: - Write Mode Content
     private var writeModeContent: some View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: $inputText)
                 .scrollContentBackground(.hidden)
-                .foregroundColor(QuietlyColors.cardTextDark)
+                .foregroundColor(QuietlyColors.quietPageBlue) // #001DDE
                 .font(.system(size: 17, weight: .medium))
                 .padding(20)
+                .focused($isTextEditorFocused)
+                .contentShape(Rectangle())
             
-            if inputText.isEmpty {
+            if inputText.isEmpty && !isTextEditorFocused {
                 Text("What's on your mind?")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundColor(QuietlyColors.quietPageBlue.opacity(0.4))
                     .padding(24)
                     .allowsHitTesting(false)
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            isTextEditorFocused = true
         }
     }
     
@@ -470,11 +506,16 @@ struct ClearView: View {
             return
         }
         
-        withAnimation(.easeInOut(duration: 0.3)) {
+        // Reset processing state
+        processingCompleted = false
+        processingError = nil
+        
+        withAnimation(.easeInOut(duration: 0.2)) {
             isProcessing = true
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) {
+        // Start extraction after a brief delay to let overlay animate in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
             performExtraction()
         }
     }
@@ -482,102 +523,114 @@ struct ClearView: View {
     private func performExtraction() {
         let textToProcess = inputText
         
-        let extractor = LocalExtractor()
-        let result = extractor.extract(from: textToProcess)
-        
-        let context = PersistenceController.shared.container.viewContext
-        
-        let dump = BrainDump(context: context)
-        dump.id = UUID()
-        dump.rawText = textToProcess
-        dump.mode = inputMode == .write ? "text" : "voice"
-        dump.createdAt = Date()
-        dump.processedAt = Date()
-        
-        for taskText in result.tasks {
-            let normalizedText = normalizeText(taskText)
+        do {
+            let extractor = LocalExtractor()
+            let result = extractor.extract(from: textToProcess)
             
-            if !isDuplicateTask(normalizedText, in: dump, context: context) {
+            // Check if result is empty/nil
+            guard !result.tasks.isEmpty || !result.decisions.isEmpty || !result.worries.isEmpty || !result.ideas.isEmpty else {
+                // Empty result - handle as error
+                DispatchQueue.main.async {
+                    self.processingError = "No items found in your text. Try adding more details."
+                }
+                return
+            }
+            
+            let context = PersistenceController.shared.container.viewContext
+            
+            let dump = BrainDump(context: context)
+            dump.id = UUID()
+            dump.rawText = textToProcess
+            dump.mode = inputMode == .write ? "text" : "voice"
+            dump.createdAt = Date()
+            dump.processedAt = Date()
+            
+            for taskText in result.tasks {
+                let normalizedText = normalizeText(taskText)
+                
+                if !isDuplicateTask(normalizedText, in: dump, context: context) {
+                    let item = ExtractedItem(context: context)
+                    item.id = UUID()
+                    item.text = taskText
+                    item.type = "task"
+                    item.createdAt = Date()
+                    item.sourceDump = dump
+                    item.isPromotedToTask = true
+                    
+                    let task = TaskItem(context: context)
+                    task.id = UUID()
+                    task.title = taskText
+                    task.createdAt = Date()
+                    task.isCompleted = false
+                    task.sourceKind = "clear"
+                    task.sourceDump = dump
+                    
+                    item.linkedTask = task
+                }
+            }
+            
+            for decisionDraft in result.decisions {
                 let item = ExtractedItem(context: context)
                 item.id = UUID()
-                item.text = taskText
-                item.type = "task"
+                item.text = decisionDraft.question
+                item.type = "decision"
                 item.createdAt = Date()
                 item.sourceDump = dump
-                item.isPromotedToTask = true
                 
-                let task = TaskItem(context: context)
-                task.id = UUID()
-                task.title = taskText
-                task.createdAt = Date()
-                task.isCompleted = false
-                task.sourceKind = "clear"
-                task.sourceDump = dump
+                let decision = Decision(context: context)
+                decision.id = UUID()
+                decision.question = decisionDraft.question
+                decision.optionA = decisionDraft.optionA
+                decision.optionB = decisionDraft.optionB
+                decision.status = "active"
+                decision.createdAt = Date()
+                decision.isLockedPreview = !entitlements.isPro
+                decision.sourceDump = dump
                 
-                item.linkedTask = task
-            }
-        }
-        
-        for decisionDraft in result.decisions {
-            let item = ExtractedItem(context: context)
-            item.id = UUID()
-            item.text = decisionDraft.question
-            item.type = "decision"
-            item.createdAt = Date()
-            item.sourceDump = dump
-            
-            let decision = Decision(context: context)
-            decision.id = UUID()
-            decision.question = decisionDraft.question
-            decision.optionA = decisionDraft.optionA
-            decision.optionB = decisionDraft.optionB
-            decision.status = "active"
-            decision.createdAt = Date()
-            decision.isLockedPreview = !entitlements.isPro
-            decision.sourceDump = dump
-            
-            if entitlements.isPro {
-                decision.analysis = decisionDraft.analysis
-                decision.suggestedNextStep = decisionDraft.nextStep
+                if entitlements.isPro {
+                    decision.analysis = decisionDraft.analysis
+                    decision.suggestedNextStep = decisionDraft.nextStep
+                }
+                
+                item.linkedDecision = decision
             }
             
-            item.linkedDecision = decision
-        }
-        
-        for worryText in result.worries {
-            let item = ExtractedItem(context: context)
-            item.id = UUID()
-            item.text = worryText
-            item.type = "worry"
-            item.createdAt = Date()
-            item.sourceDump = dump
-        }
-        
-        for ideaText in result.ideas {
-            let item = ExtractedItem(context: context)
-            item.id = UUID()
-            item.text = ideaText
-            item.type = "idea"
-            item.createdAt = Date()
-            item.sourceDump = dump
-        }
-        
-        do {
+            for worryText in result.worries {
+                let item = ExtractedItem(context: context)
+                item.id = UUID()
+                item.text = worryText
+                item.type = "worry"
+                item.createdAt = Date()
+                item.sourceDump = dump
+            }
+            
+            for ideaText in result.ideas {
+                let item = ExtractedItem(context: context)
+                item.id = UUID()
+                item.text = ideaText
+                item.type = "idea"
+                item.createdAt = Date()
+                item.sourceDump = dump
+            }
+            
             try context.save()
+            
+            entitlements.incrementProcessUsage()
+            
+            extractionResult = result
+            currentBrainDump = dump
+            
+            // Signal completion - overlay will handle the fade out
+            DispatchQueue.main.async {
+                self.processingCompleted = true
+            }
+            
         } catch {
-            print("Failed to save: \(error)")
+            print("Failed to process: \(error)")
+            DispatchQueue.main.async {
+                self.processingError = "Something went wrong. Please try again."
+            }
         }
-        
-        entitlements.incrementProcessUsage()
-        
-        extractionResult = result
-        currentBrainDump = dump
-        
-        withAnimation(.easeInOut(duration: 0.3)) {
-            isProcessing = false
-        }
-        
-        showResults = true
     }
     
     // MARK: - Deduplication Helpers
