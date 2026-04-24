@@ -12,233 +12,295 @@ struct DecisionDetailView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var entitlements = EntitlementsManager.shared
-    
+
     @ObservedObject var decision: Decision
-    
+
     @State private var showResolutionMessage: Bool = false
     @State private var showPaywall: Bool = false
-    
+
     var body: some View {
         ScrollView {
-            VStack(spacing: QuietlySpacing.sectionSpacing) {
-                // Question Section
-                VStack(alignment: .leading, spacing: 8) {
-                    SectionHeader(title: "Question")
-                    
-                    Text(decision.question ?? "Untitled")
-                        .font(.title3)
-                        .fontWeight(.medium)
-                        .foregroundColor(QuietlyColors.cardTextDark)
-                        .padding(QuietlySpacing.cardPadding)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(QuietlyColors.cardBackground)
-                        .cornerRadius(12)
-                }
-                
-                // Analysis Section (Pro locked for free users)
-                VStack(alignment: .leading, spacing: 8) {
-                    SectionHeader(title: "What seems to matter")
-                    
-                    if decision.isLockedPreview && !entitlements.isPro {
-                        lockedContentView
-                    } else {
-                        analysisContent
-                    }
-                }
-                
-                // Option A
-                if let optionA = decision.optionA, !optionA.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        SectionHeader(title: "Option A")
-                        
-                        Text(optionA)
-                            .font(QuietlyTypography.body)
-                            .foregroundColor(QuietlyColors.cardTextDark)
-                            .padding(QuietlySpacing.cardPadding)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(QuietlyColors.cardBackground)
-                            .cornerRadius(12)
-                    }
-                }
-                
-                // Option B
-                if let optionB = decision.optionB, !optionB.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        SectionHeader(title: "Option B")
-                        
-                        Text(optionB)
-                            .font(QuietlyTypography.body)
-                            .foregroundColor(QuietlyColors.cardTextDark)
-                            .padding(QuietlySpacing.cardPadding)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(QuietlyColors.cardBackground)
-                            .cornerRadius(12)
-                    }
-                }
-                
-                // Suggested Next Step (Pro)
-                if entitlements.isPro {
-                    VStack(alignment: .leading, spacing: 8) {
-                        SectionHeader(title: "Suggested Next Step")
-                        
-                        Text(decision.suggestedNextStep ?? "No suggestion available")
-                            .font(QuietlyTypography.body)
-                            .foregroundColor(QuietlyColors.cardTextDark)
-                            .padding(QuietlySpacing.cardPadding)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(QuietlyColors.cardBackground)
-                            .cornerRadius(12)
-                    }
-                }
-                
-                // Resolution Message
-                if showResolutionMessage {
-                    rememberMessageCard
-                }
-                
-                // Mark as Resolved Button
-                if decision.status == "active" {
-                    Button(action: markAsResolved) {
-                        Text("Mark as Resolved")
-                            .font(.headline)
-                            .foregroundColor(QuietlyColors.headingWhite)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(QuietlyColors.appBlue)
-                            .cornerRadius(12)
-                    }
-                    .padding(.top, 8)
-                }
-                
-                // Reopen Button (for archived)
-                if decision.status == "archived" {
-                    Button(action: reopenDecision) {
-                        Text("Reopen Decision")
-                            .font(.headline)
-                            .foregroundColor(QuietlyColors.cardTextDark)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(QuietlyColors.cardBackground)
-                            .cornerRadius(12)
-                    }
-                    .padding(.top, 8)
-                }
+            VStack(spacing: 16) {
+                questionCard
+                optionsCard
+                analysisCard
+                if entitlements.isPro { nextStepCard }
+                if showResolutionMessage { resolutionCard }
+                actionButton
             }
-            .padding(.horizontal, QuietlySpacing.outerPadding)
+            .padding(.horizontal, 16)
             .padding(.top, 16)
-            .padding(.bottom, 32)
+            .padding(.bottom, 40)
         }
-        .background(QuietlyColors.quietPageBackground)
+        .background(QuietlyColors.background.ignoresSafeArea())
         .navigationTitle("Decision")
-        .sheet(isPresented: $showPaywall) {
-            PaywallView()
-        }
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showPaywall) { PaywallView() }
     }
-    
-    // MARK: - Analysis Content
-    private var analysisContent: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Sample analysis - in production this would come from extraction
-            Text("• Consider the long-term implications")
-                .font(QuietlyTypography.body)
-                .foregroundColor(QuietlyColors.cardTextDark)
-            Text("• Think about your current priorities")
-                .font(QuietlyTypography.body)
-                .foregroundColor(QuietlyColors.cardTextDark)
-            Text("• Trust your gut feeling")
-                .font(QuietlyTypography.body)
-                .foregroundColor(QuietlyColors.cardTextDark)
+
+    // MARK: - Question Card
+    private var questionCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            label("The Question", icon: "questionmark.circle.fill", color: QuietlyColors.primaryBlue)
+
+            Text(decision.question ?? "Untitled")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(QuietlyColors.darkText)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(QuietlySpacing.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(QuietlyColors.cardBackground)
-        .cornerRadius(12)
+        .card()
     }
-    
-    // MARK: - Locked Content
-    private var lockedContentView: some View {
-        ZStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("• Consider the trade-offs")
-                    .font(QuietlyTypography.body)
-                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
-                Text("• Think about timing")
-                    .font(QuietlyTypography.body)
-                    .foregroundColor(QuietlyColors.cardTextDark.opacity(0.6))
-            }
-            .blur(radius: 3)
-            .padding(QuietlySpacing.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(QuietlyColors.cardBackground)
-            .cornerRadius(12)
-            
-            VStack(spacing: 8) {
-                Image(systemName: "lock.fill")
-                    .font(.title2)
-                    .foregroundColor(QuietlyColors.cardTextDark)
-                Text("Unlock Pro to see analysis")
-                    .font(.callout)
-                    .foregroundColor(QuietlyColors.cardTextDark)
-                Button("Unlock Pro") {
-                    showPaywall = true
+
+    // MARK: - Options Card
+    @ViewBuilder
+    private var optionsCard: some View {
+        let hasA = !(decision.optionA ?? "").isEmpty
+        let hasB = !(decision.optionB ?? "").isEmpty
+
+        if hasA || hasB {
+            VStack(alignment: .leading, spacing: 12) {
+                label("Your Options", icon: "arrow.left.arrow.right", color: Color(hex: "6B7AE8"))
+
+                if hasA {
+                    optionBlock(letter: "A", text: decision.optionA!, canDecide: decision.status == "active") {
+                        resolveDecision(chosenOption: decision.optionA!)
+                    }
                 }
-                .font(.callout)
-                .foregroundColor(QuietlyColors.appBlue)
+
+                if hasA && hasB {
+                    HStack(spacing: 8) {
+                        Rectangle().fill(Color.gray.opacity(0.15)).frame(height: 1)
+                        Text("OR")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(QuietlyColors.mutedText)
+                            .fixedSize()
+                        Rectangle().fill(Color.gray.opacity(0.15)).frame(height: 1)
+                    }
+                }
+
+                if hasB {
+                    optionBlock(letter: "B", text: decision.optionB!, canDecide: decision.status == "active") {
+                        resolveDecision(chosenOption: decision.optionB!)
+                    }
+                }
             }
-            .padding(24)
-            .background(QuietlyColors.cardBackground)
-            .cornerRadius(12)
+            .card()
         }
     }
-    
-    // MARK: - Remember Message
-    private var rememberMessageCard: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "lightbulb")
-                .font(.title2)
-                .foregroundColor(QuietlyColors.cardTextDark)
-            
-            Text("Remember…")
-                .font(.headline)
-                .foregroundColor(QuietlyColors.cardTextDark)
-            
-            Text("Most decisions aren't permanent. You can adjust your path as you learn more.")
-                .font(QuietlyTypography.body)
-                .foregroundColor(QuietlyColors.cardTextDark.opacity(0.8))
-                .multilineTextAlignment(.center)
+
+    private func optionBlock(letter: String, text: String, canDecide: Bool, onDecide: @escaping () -> Void) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(QuietlyColors.primaryBlue.opacity(0.1))
+                    .frame(width: 32, height: 32)
+                Text(letter)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(QuietlyColors.primaryBlue)
+            }
+
+            Text(text)
+                .font(.system(size: 15))
+                .foregroundColor(QuietlyColors.darkText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if canDecide {
+                Button(action: onDecide) {
+                    Text("Decide")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(QuietlyColors.primaryBlue)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(QuietlyColors.green)
+                        .cornerRadius(20)
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .padding(20)
-        .background(Color.accentColor.opacity(0.1))
-        .cornerRadius(12)
-        .transition(.opacity.combined(with: .scale))
+        .padding(12)
+        .background(QuietlyColors.primaryBlue.opacity(0.04))
+        .cornerRadius(14)
     }
-    
+
+    // MARK: - Analysis Card
+    private var analysisCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            label("What Seems to Matter", icon: "brain.head.profile", color: Color(hex: "FF9500"))
+
+            if decision.isLockedPreview && !entitlements.isPro {
+                lockedAnalysis
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    analysisPoint("Consider the long-term implications of each path.")
+                    analysisPoint("Think about what aligns with your current priorities.")
+                    analysisPoint("Trust your instincts — they often carry real data.")
+                }
+            }
+        }
+        .card()
+    }
+
+    private func analysisPoint(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(QuietlyColors.primaryBlue)
+                .frame(width: 6, height: 6)
+                .padding(.top, 6)
+            Text(text)
+                .font(.system(size: 14))
+                .foregroundColor(QuietlyColors.darkText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var lockedAnalysis: some View {
+        VStack(spacing: 14) {
+            ZStack {
+                VStack(alignment: .leading, spacing: 10) {
+                    analysisPoint("Consider the trade-offs of each option.")
+                    analysisPoint("Think about timing and context.")
+                }
+                .blur(radius: 4)
+                .allowsHitTesting(false)
+            }
+
+            Button(action: { showPaywall = true }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.fill").font(.system(size: 12))
+                    Text("Unlock Pro to see full analysis")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .foregroundColor(QuietlyColors.primaryBlue)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(QuietlyColors.primaryBlue.opacity(0.08))
+                .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - Next Step Card
+    private var nextStepCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            label("Suggested Next Step", icon: "arrow.right.circle.fill", color: QuietlyColors.green)
+
+            Text(decision.suggestedNextStep ?? "Take a day to reflect before making a final call.")
+                .font(.system(size: 15))
+                .foregroundColor(QuietlyColors.darkText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .card()
+    }
+
+    // MARK: - Resolution Card
+    private var resolutionCard: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(QuietlyColors.green.opacity(0.2))
+                    .frame(width: 44, height: 44)
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(QuietlyColors.primaryBlue)
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Decision made.")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(QuietlyColors.darkText)
+                Text("Most decisions aren't permanent. You can always revisit.")
+                    .font(.system(size: 13))
+                    .foregroundColor(QuietlyColors.mutedText)
+            }
+        }
+        .card()
+        .transition(.opacity.combined(with: .move(edge: .top)))
+    }
+
+    // MARK: - Action Button
+    @ViewBuilder
+    private var actionButton: some View {
+        if decision.status == "active" {
+            Button(action: markAsResolved) {
+                Text("Mark as Resolved")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundColor(QuietlyColors.primaryBlue)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(QuietlyColors.green)
+                    .cornerRadius(27)
+            }
+            .padding(.top, 4)
+        } else {
+            Button(action: reopenDecision) {
+                Text("Reopen Decision")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(QuietlyColors.primaryBlue)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(Color.white)
+                    .cornerRadius(27)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 27)
+                            .stroke(QuietlyColors.primaryBlue.opacity(0.3), lineWidth: 1.5)
+                    )
+            }
+            .padding(.top, 4)
+        }
+    }
+
+    // MARK: - Helpers
+    private func label(_ title: String, icon: String, color: Color) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 15))
+                .foregroundColor(color)
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(QuietlyColors.mutedText)
+        }
+    }
+
     // MARK: - Actions
     private func markAsResolved() {
-        withAnimation {
+        withAnimation(.easeInOut(duration: 0.3)) {
             decision.status = "archived"
             decision.resolvedAt = Date()
-            
             try? viewContext.save()
-            
-            withAnimation {
-                showResolutionMessage = true
-            }
-            
-            // Delay then dismiss
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                dismiss()
-            }
+            showResolutionMessage = true
         }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { dismiss() }
     }
-    
+
+    private func resolveDecision(chosenOption: String) {
+        withAnimation(.easeInOut(duration: 0.3)) {
+            decision.status = "archived"
+            decision.resolvedAt = Date()
+            decision.analysis = "Decided: \(chosenOption)"
+            try? viewContext.save()
+            showResolutionMessage = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { dismiss() }
+    }
+
     private func reopenDecision() {
         withAnimation {
             decision.status = "active"
             decision.resolvedAt = nil
-            
             try? viewContext.save()
         }
+    }
+}
+
+// MARK: - Card Modifier
+private extension View {
+    func card() -> some View {
+        self
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.white)
+            .cornerRadius(20)
+            .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 3)
     }
 }
 

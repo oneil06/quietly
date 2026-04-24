@@ -31,11 +31,11 @@ struct ProcessingOverlayViewContainer: View {
     @State private var startTime: Date = Date()
     
     private let messages = [
-        "Organizing your thoughts…",
-        "Finding tasks…",
-        "Detecting decisions…",
-        "Grouping repeated themes…",
-        "Finalizing…"
+        "Reading between the lines…",
+        "Surfacing what matters…",
+        "Finding what you need to do…",
+        "Untangling your decisions…",
+        "Almost there…"
     ]
     
     private let messageInterval: TimeInterval = 0.6

@@ -255,7 +255,7 @@ struct CustomTabBar: View {
             .padding(.top, 8)
             .padding(.bottom, 24)
         }
-            .background(Color.white)
+            .background(QuietlyColors.background)
         .overlay(
             // Center button on top
             centerTabButton(tab: .quiet),
@@ -269,11 +269,11 @@ struct CustomTabBar: View {
             ZStack {
                 // Circular button
                 Circle()
-                    .fill(QuietlyColors.quietPageBlue)
+                    .fill(QuietlyColors.primaryBlue)
                     .frame(width: 52, height: 52)
                     .overlay(
                         Circle()
-                            .stroke(Color.gray.opacity(0.3), lineWidth: 0.5)
+                            .stroke(Color.white.opacity(0.3), lineWidth: 0.5)
                     )
                 
                 // Custom sparkle icon from SVG
@@ -303,7 +303,7 @@ struct TabBarItem: View {
                 Text(tab.rawValue)
                     .font(.system(size: 11, weight: isSelected ? .heavy : .semibold))
             }
-            .foregroundColor(isSelected ? QuietlyColors.quietPageBlue : QuietlyColors.quietPageBlue.opacity(0.5))
+            .foregroundColor(isSelected ? QuietlyColors.primaryBlue : QuietlyColors.primaryBlue.opacity(0.5))
             .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)

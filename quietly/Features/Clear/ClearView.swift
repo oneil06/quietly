@@ -9,83 +9,65 @@ import SwiftUI
 import CoreData
 import AVFoundation
 import Speech
-#if canImport(AppKit)
-import AppKit
-#endif
+import UIKit
 
 struct ClearView: View {
     @ObservedObject var entitlements = EntitlementsManager.shared
-    
+
     @Binding var prefilledText: String
     @Binding var navigateToDecisions: Bool
-    
+
     @State private var inputText: String = ""
     @State private var isProcessing: Bool = false
     @State private var showResults: Bool = false
     @State private var showPaywall: Bool = false
-    
-    // Processing overlay state
+
     @State private var processingCompleted: Bool = false
     @State private var processingError: String? = nil
-    
-    // Extracted results
+
     @State private var extractionResult: ExtractionResult?
     @State private var currentBrainDump: BrainDump?
-    
-    // MARK: - UI State for Segmented Control
+
     @State private var inputMode: InputMode = .write
     @FocusState private var isTextEditorFocused: Bool
-    
-    enum InputMode {
-        case write
-        case talk
-    }
-    
-    // MARK: - Recording State
+
+    enum InputMode { case write, talk }
+
+    // Recording
     @State private var isRecording: Bool = false
     @State private var isPaused: Bool = false
     @State private var audioRecorder: AVAudioRecorder?
     @State private var audioURL: URL?
-    
+    @State private var showPermissionAlert: Bool = false
+    @State private var isTranscribing: Bool = false
+    @State private var speechRecognizer: SFSpeechRecognizer? = SFSpeechRecognizer()
+    @State private var recognitionTask: SFSpeechRecognitionTask?
+
     private var isButtonDisabled: Bool {
-        inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isRecording
     }
-    
+
     var body: some View {
         ZStack {
-            // MARK: - Background: Light Gray
-            QuietlyColors.quietPageBackground
-                .ignoresSafeArea()
-            
+            QuietlyColors.background.ignoresSafeArea()
+
             VStack(spacing: 0) {
-                // MARK: - Header Section
-                VStack(spacing: 8) {
-                    Image("SplashLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 48)
-                    
-                    Text("Your Thoughts, Organized Quietly.")
-                        .font(.system(size: 15, weight: .light))
-                        .foregroundColor(QuietlyColors.quietPageBlue)
-                }
-                .padding(.top, 16)
-                .padding(.bottom, 24)
-                
-                // MARK: - Segmented Control
-                segmentedControl
-                    .padding(.horizontal, 20)
+                headerSection
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
                     .padding(.bottom, 20)
-                
-                // MARK: - Main Input Card
+
+                modePicker
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
+
                 inputCard
-                    .padding(.horizontal, 20)
-                
+                    .padding(.horizontal, 16)
+
                 Spacer()
-                
-                // MARK: - Primary CTA Button
-                ctaButton
-                    .padding(.horizontal, 20)
+
+                bottomBar
+                    .padding(.horizontal, 16)
                     .padding(.bottom, 20)
             }
         }
@@ -96,9 +78,7 @@ struct ClearView: View {
             }
         }
         .onChange(of: navigateToDecisions) { _, newValue in
-            if newValue {
-                navigateToDecisions = false
-            }
+            if newValue { navigateToDecisions = false }
         }
         .sheet(isPresented: $showResults) {
             if let result = extractionResult, let dump = currentBrainDump {
@@ -111,8 +91,16 @@ struct ClearView: View {
                 )
             }
         }
-        .sheet(isPresented: $showPaywall) {
-            PaywallView()
+        .sheet(isPresented: $showPaywall) { PaywallView() }
+        .alert("Microphone Access Required", isPresented: $showPermissionAlert) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Please allow microphone and speech recognition access in Settings to use voice recording.")
         }
         .overlay {
             if isProcessing {
@@ -121,13 +109,11 @@ struct ClearView: View {
                     processingCompleted: $processingCompleted,
                     processingError: $processingError,
                     onComplete: {
-                        // Show results when processing completes
                         if extractionResult != nil && currentBrainDump != nil {
                             showResults = true
                         }
                     },
                     onErrorDismiss: {
-                        // Reset error state
                         processingError = nil
                         processingCompleted = false
                     }
@@ -135,550 +121,499 @@ struct ClearView: View {
                 .transition(.opacity)
             }
         }
-        .onChange(of: processingCompleted) { _, completed in
-            if completed && processingError == nil {
-                // Processing finished successfully, overlay will dismiss itself
-                // and call onComplete to show results
+    }
+
+    // MARK: - Header
+    private var headerSection: some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 4) {
+                Image("SplashLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 36)
+                Text("Your Thoughts, Organized Quietly.")
+                    .font(.system(size: 14, weight: .light))
+                    .foregroundColor(QuietlyColors.mutedText)
+            }
+            Spacer()
+            if !entitlements.isPro {
+                Button(action: { showPaywall = true }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 11))
+                        Text("Pro")
+                            .font(.system(size: 12, weight: .bold))
+                    }
+                    .foregroundColor(QuietlyColors.primaryBlue)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(QuietlyColors.green)
+                    .cornerRadius(14)
+                }
+                .buttonStyle(.plain)
             }
         }
     }
-    
-    // MARK: - Segmented Control
-    private var segmentedControl: some View {
+
+    // MARK: - Mode Picker
+    private var modePicker: some View {
         HStack(spacing: 0) {
-            // Write Button
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    inputMode = .write
-                }
-            } label: {
-                VStack(spacing: 8) {
-                    Text("Write")
-                        .font(.system(size: 16, weight: inputMode == .write ? .bold : .regular))
-                        .foregroundColor(QuietlyColors.quietPageBlue)
-                    
-                    // Underline
-                    Rectangle()
-                        .fill(inputMode == .write ? QuietlyColors.quietPageBlue : QuietlyColors.quietPageBlue.opacity(0.2))
-                        .frame(width: 175, height: 2)
-                        .offset(x: 2.5)  // Move toward center
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-            }
-            .buttonStyle(.plain)
-            
-            // Talk Button
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    inputMode = .talk
-                }
-            } label: {
-                VStack(spacing: 8) {
-                    Text("Talk")
-                        .font(.system(size: 16, weight: inputMode == .talk ? .bold : .regular))
-                        .foregroundColor(QuietlyColors.quietPageBlue)
-                    
-                    // Underline
-                    Rectangle()
-                        .fill(inputMode == .talk ? QuietlyColors.quietPageBlue : QuietlyColors.quietPageBlue.opacity(0.2))
-                        .frame(width: 175, height: 2)
-                        .offset(x: -2.5)  // Move toward center
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-            }
-            .buttonStyle(.plain)
+            modeButton("Write", mode: .write)
+            modeButton("Talk", mode: .talk)
         }
-        .frame(height: 44)
     }
-    
+
+    private func modeButton(_ title: String, mode: InputMode) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { inputMode = mode }
+        } label: {
+            VStack(spacing: 6) {
+                Text(title)
+                    .font(.system(size: 16, weight: inputMode == mode ? .bold : .regular))
+                    .foregroundColor(QuietlyColors.primaryBlue)
+                Rectangle()
+                    .fill(inputMode == mode ? QuietlyColors.primaryBlue : QuietlyColors.primaryBlue.opacity(0.15))
+                    .frame(height: 2)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - Input Card
     private var inputCard: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        Group {
             if inputMode == .write {
-                writeModeContent
+                writeModeCard
             } else {
-                talkModeContent
+                talkModeCard
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: inputCardHeight)
+        .frame(height: 400)
         .background(Color.white)
-        .cornerRadius(28)
-        .overlay(
-            RoundedRectangle(cornerRadius: 28)
-                .stroke(QuietlyColors.quietPageBlue, lineWidth: 2)
-        )
+        .cornerRadius(24)
+        .shadow(color: Color.black.opacity(0.07), radius: 16, x: 0, y: 4)
     }
-    
-    private let inputCardHeight: CGFloat = 440
-    
-    // MARK: - Write Mode Content
-    private var writeModeContent: some View {
+
+    // MARK: - Write Mode
+    private var writeModeCard: some View {
         ZStack(alignment: .topLeading) {
             TextEditor(text: $inputText)
                 .scrollContentBackground(.hidden)
-                .foregroundColor(QuietlyColors.quietPageBlue) // #001DDE
-                .font(.system(size: 17, weight: .medium))
+                .foregroundColor(QuietlyColors.darkText)
+                .font(.system(size: 17))
                 .padding(20)
                 .focused($isTextEditorFocused)
                 .contentShape(Rectangle())
-            
+
             if inputText.isEmpty && !isTextEditorFocused {
                 Text("What's on your mind?")
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(QuietlyColors.quietPageBlue.opacity(0.4))
-                    .padding(24)
+                    .font(.system(size: 17))
+                    .foregroundColor(QuietlyColors.mutedText.opacity(0.7))
+                    .padding(.horizontal, 24)
+                    .padding(.top, 28)
                     .allowsHitTesting(false)
+            }
+
+            // Character hint when text is short
+            if !inputText.isEmpty && inputText.count < 20 {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Text("Keep going…")
+                            .font(.system(size: 12))
+                            .foregroundColor(QuietlyColors.mutedText.opacity(0.5))
+                            .padding(16)
+                    }
+                }
+                .allowsHitTesting(false)
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture {
-            isTextEditorFocused = true
-        }
+        .onTapGesture { isTextEditorFocused = true }
     }
-    
-    // MARK: - Talk Mode Content
-    private var talkModeContent: some View {
-        VStack(spacing: 20) {
-            if !isRecording {
-                // Idle state
-                VStack(spacing: 12) {
-                    Spacer()
-                    
-                    ZStack {
-                        Circle()
-                            .stroke(QuietlyColors.quietPageBlue, lineWidth: 2)
-                            .frame(width: 120, height: 120)
-                        
-                        Circle()
-                            .fill(QuietlyColors.quietPageBlue)
-                            .frame(width: 100, height: 100)
-                        
-                        Image(systemName: "mic.fill")
-                            .font(.system(size: 40))
-                            .foregroundColor(.white)
-                    }
-                    
-                    Text("Tap to Record")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(QuietlyColors.quietPageBlue)
-                    
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    startRecording()
-                }
+
+    // MARK: - Talk Mode
+    private var talkModeCard: some View {
+        Group {
+            if isTranscribing {
+                transcribingView
+            } else if isRecording {
+                recordingActiveView
             } else {
-                // Recording state
-                VStack(spacing: 20) {
-                    Text(isPaused ? "Paused" : "Recording...")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundColor(QuietlyColors.quietPageBlue)
-                    
-                    // Audio visualization
-                    HStack(spacing: 2) {
-                        ForEach(0..<20, id: \.self) { index in
-                            AudioBarView(isActive: !isPaused)
-                        }
-                    }
-                    .frame(height: 40)
-                    
-                    // Control buttons
-                    HStack(spacing: 24) {
-                        Button {
-                            togglePause()
-                        } label: {
-                            Circle()
-                                .fill(QuietlyColors.quietPageBlue.opacity(0.2))
-                                .frame(width: 80, height: 80)
-                                .overlay(
-                                    Image(systemName: isPaused ? "play.fill" : "pause.fill")
-                                        .font(.system(size: 24))
-                                        .foregroundColor(QuietlyColors.quietPageBlue)
-                                )
-                        }
-                        
-                        Button {
-                            stopRecording()
-                        } label: {
-                            ZStack {
-                                Circle()
-                                    .fill(QuietlyColors.quietPageBlue)
-                                    .frame(width: 100, height: 100)
-                                
-                                Rectangle()
-                                    .fill(.white)
-                                    .frame(width: 40, height: 38)
-                                    .cornerRadius(8)
-                            }
-                        }
-                    }
+                recordingIdleView
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var recordingIdleView: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Button(action: { startRecording() }) {
+                ZStack {
+                    Circle()
+                        .fill(QuietlyColors.micRed.opacity(0.1))
+                        .frame(width: 140, height: 140)
+                    Circle()
+                        .fill(QuietlyColors.micRed.opacity(0.2))
+                        .frame(width: 112, height: 112)
+                    Circle()
+                        .fill(QuietlyColors.micRed)
+                        .frame(width: 88, height: 88)
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 36))
+                        .foregroundColor(.white)
                 }
             }
+            .buttonStyle(.plain)
+
+            Text("Tap to Record")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(QuietlyColors.mutedText)
+            Spacer()
+        }
+    }
+
+    private var recordingActiveView: some View {
+        VStack(spacing: 24) {
+            Spacer()
+
+            // Status label
+            HStack(spacing: 8) {
+                if !isPaused {
+                    Circle()
+                        .fill(QuietlyColors.micRed)
+                        .frame(width: 8, height: 8)
+                }
+                Text(isPaused ? "Paused" : "Recording...")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(QuietlyColors.darkText)
+            }
+
+            // Waveform
+            HStack(spacing: 3) {
+                ForEach(0..<24, id: \.self) { _ in
+                    AudioBarView(isActive: !isPaused)
+                }
+            }
+            .frame(height: 52)
+            .padding(.horizontal, 24)
+
+            // Controls
+            HStack(spacing: 32) {
+                Button(action: { togglePause() }) {
+                    ZStack {
+                        Circle()
+                            .fill(QuietlyColors.primaryBlue.opacity(0.1))
+                            .frame(width: 60, height: 60)
+                        Image(systemName: isPaused ? "play.fill" : "pause.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(QuietlyColors.primaryBlue)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                Button(action: { stopRecording() }) {
+                    ZStack {
+                        Circle()
+                            .fill(QuietlyColors.primaryBlue)
+                            .frame(width: 80, height: 80)
+                        RoundedRectangle(cornerRadius: 7)
+                            .fill(Color.white)
+                            .frame(width: 30, height: 30)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+
+            Spacer()
+        }
+    }
+
+    private var transcribingView: some View {
+        VStack(spacing: 14) {
+            Spacer()
+            ProgressView()
+                .scaleEffect(1.3)
+                .tint(QuietlyColors.primaryBlue)
+            Text("Transcribing...")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(QuietlyColors.mutedText)
+            Spacer()
         }
         .frame(maxWidth: .infinity)
     }
-    
-    // MARK: - Audio Bar View
+
+    // MARK: - Audio Bar
     private struct AudioBarView: View {
         var isActive: Bool
-        @State private var height: CGFloat = 30
-        
+        @State private var barHeight: CGFloat = 8
+
         var body: some View {
-            Rectangle()
-                .fill(QuietlyColors.quietPageBlue)
-                .frame(width: 7, height: height)
+            RoundedRectangle(cornerRadius: 2)
+                .fill(QuietlyColors.primaryBlue)
+                .frame(width: 4, height: barHeight)
                 .animation(
-                    isActive ?
-                        Animation.easeInOut(duration: 0.3).repeatForever(autoreverses: true)
-                        : Animation.linear(duration: 0.3),
-                    value: height
+                    isActive
+                        ? Animation.easeInOut(duration: Double.random(in: 0.2...0.5)).repeatForever(autoreverses: true)
+                        : .linear(duration: 0.2),
+                    value: barHeight
                 )
-                .onAppear {
-                    updateHeight()
-                }
-                .onChange(of: isActive) { _, newValue in
-                    if newValue {
-                        updateHeight()
-                    } else {
-                        height = 30
-                    }
+                .onAppear { barHeight = CGFloat.random(in: 8...48) }
+                .onChange(of: isActive) { _, active in
+                    barHeight = active ? CGFloat.random(in: 8...48) : 8
                 }
         }
-        
-        private func updateHeight() {
-            height = CGFloat.random(in: 20...60)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                if isActive {
-                    updateHeight()
-                }
-            }
-        }
     }
-    
-    // MARK: - Recording Methods
-    #if canImport(UIKit)
-    private func startRecording() {
-        // Request speech recognition permission
-        SFSpeechRecognizer.requestAuthorization { authStatus in
-            DispatchQueue.main.async {
-                guard authStatus == .authorized else {
-                    // Show permission denied alert
-                    return
-                }
-                
-                // Configure audio session
-                do {
-                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .default)
-                    try AVAudioSession.sharedInstance().setActive(true)
-                    
-                    // Create audio file URL
-                    let audioFilename = self.getDocumentsDirectory().appendingPathComponent("recording.m4a")
-                    self.audioURL = audioFilename
-                    
-                    // Set up audio recorder
-                    let settings = [
-                        AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-                        AVSampleRateKey: 44100.0,
-                        AVNumberOfChannelsKey: 2,
-                        AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-                    ]
-                    
-                    self.audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
-                    self.audioRecorder?.isMeteringEnabled = true
-                    self.audioRecorder?.record()
-                    
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        self.isRecording = true
-                        self.isPaused = false
-                    }
-                    
-                } catch {
-                    print("Error configuring audio session: \(error)")
-                }
-            }
-        }
-    }
-    #else
-    private func startRecording() {
-        // Voice recording not supported on macOS in this implementation
-    }
-    #endif
-    
-    #if canImport(UIKit)
-    private func togglePause() {
-        guard let recorder = audioRecorder else { return }
-        
-        if isPaused {
-            recorder.record()
-        } else {
-            recorder.pause()
-        }
-        
-        withAnimation(.easeInOut(duration: 0.2)) {
-            isPaused.toggle()
-        }
-    }
-    
-    private func stopRecording() {
-        audioRecorder?.stop()
-        audioRecorder = nil
-        
-        do {
-            try AVAudioSession.sharedInstance().setActive(false)
-        } catch {
-            print("Error deactivating audio session: \(error)")
-        }
-        
-        withAnimation(.easeInOut(duration: 0.3)) {
-            isRecording = false
-            isPaused = false
-        }
-        
-        // Convert speech to text
-        if let audioURL = audioURL {
-            convertSpeechToText(from: audioURL) { result in
-                DispatchQueue.main.async {
-                    inputText = result ?? "Sample transcript of your recording"
-                }
-            }
-        }
-    }
-    #else
-    private func togglePause() {
-        // Not supported on macOS
-    }
-    
-    private func stopRecording() {
-        audioRecorder?.stop()
-        audioRecorder = nil
-        
-        withAnimation(.easeInOut(duration: 0.3)) {
-            isRecording = false
-            isPaused = false
-        }
-        
-        // On macOS, prompt for text input instead
-        inputText = ""
-    }
-    #endif
-    
-    private func getDocumentsDirectory() -> URL {
-        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        return paths[0]
-    }
-    
-    // MARK: - CTA Button
-    private var ctaButton: some View {
+
+    // MARK: - Bottom Bar
+    private var bottomBar: some View {
         VStack(spacing: 10) {
             if !entitlements.isPro && entitlements.canProcessToday {
-                Text("\(entitlements.remainingProcesses) clear remaining today")
-                    .font(.system(size: 12, weight: .light))
-                    .foregroundColor(QuietlyColors.quietPageBlue.opacity(0.6))
+                HStack(spacing: 4) {
+                    Image(systemName: "bolt.fill")
+                        .font(.system(size: 11))
+                    Text("\(entitlements.remainingProcesses) free clear\(entitlements.remainingProcesses == 1 ? "" : "s") remaining today")
+                        .font(.system(size: 12))
+                }
+                .foregroundColor(QuietlyColors.mutedText)
             }
-            
-            Button {
-                handleProcess()
-            } label: {
-                Text("AI Analysis")
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundColor(QuietlyColors.quietPageBlue)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(QuietlyColors.buttonGreenBackground)
-                    .cornerRadius(27)
+
+            Button(action: { handleProcess() }) {
+                HStack(spacing: 10) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 16, weight: .semibold))
+                    Text("AI Analysis")
+                        .font(.system(size: 18, weight: .bold))
+                }
+                .foregroundColor(QuietlyColors.primaryBlue)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(isButtonDisabled ? Color.gray.opacity(0.2) : QuietlyColors.green)
+                .cornerRadius(28)
             }
             .disabled(isButtonDisabled)
-            .opacity(isButtonDisabled ? 0.5 : 1.0)
-            .scaleEffect(isButtonDisabled ? 0.98 : 1.0)
-            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isButtonDisabled)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isButtonDisabled)
         }
     }
-    
-    // MARK: - Actions
-    private func handleProcess() {
-        guard entitlements.canProcessToday else {
-            showPaywall = true
-            return
-        }
-        
-        // Reset processing state
-        processingCompleted = false
-        processingError = nil
-        
-        withAnimation(.easeInOut(duration: 0.2)) {
-            isProcessing = true
-        }
-        
-        // Start extraction after a brief delay to let overlay animate in
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            performExtraction()
-        }
-    }
-    
-    private func performExtraction() {
-        let textToProcess = inputText
-        
-        do {
-            let extractor = LocalExtractor()
-            let result = extractor.extract(from: textToProcess)
-            
-            // Check if result is empty/nil
-            guard !result.tasks.isEmpty || !result.decisions.isEmpty || !result.worries.isEmpty || !result.ideas.isEmpty else {
-                // Empty result - handle as error
-                DispatchQueue.main.async {
-                    self.processingError = "No items found in your text. Try adding more details."
-                }
-                return
-            }
-            
-            let context = PersistenceController.shared.container.viewContext
-            
-            let dump = BrainDump(context: context)
-            dump.id = UUID()
-            dump.rawText = textToProcess
-            dump.mode = inputMode == .write ? "text" : "voice"
-            dump.createdAt = Date()
-            dump.processedAt = Date()
-            
-            for taskText in result.tasks {
-                let normalizedText = normalizeText(taskText)
-                
-                if !isDuplicateTask(normalizedText, in: dump, context: context) {
-                    let item = ExtractedItem(context: context)
-                    item.id = UUID()
-                    item.text = taskText
-                    item.type = "task"
-                    item.createdAt = Date()
-                    item.sourceDump = dump
-                    item.isPromotedToTask = true
-                    
-                    let task = TaskItem(context: context)
-                    task.id = UUID()
-                    task.title = taskText
-                    task.createdAt = Date()
-                    task.isCompleted = false
-                    task.sourceKind = "clear"
-                    task.sourceDump = dump
-                    
-                    item.linkedTask = task
-                }
-            }
-            
-            for decisionDraft in result.decisions {
-                let item = ExtractedItem(context: context)
-                item.id = UUID()
-                item.text = decisionDraft.question
-                item.type = "decision"
-                item.createdAt = Date()
-                item.sourceDump = dump
-                
-                let decision = Decision(context: context)
-                decision.id = UUID()
-                decision.question = decisionDraft.question
-                decision.optionA = decisionDraft.optionA
-                decision.optionB = decisionDraft.optionB
-                decision.status = "active"
-                decision.createdAt = Date()
-                decision.isLockedPreview = !entitlements.isPro
-                decision.sourceDump = dump
-                
-                if entitlements.isPro {
-                    decision.analysis = decisionDraft.analysis
-                    decision.suggestedNextStep = decisionDraft.nextStep
-                }
-                
-                item.linkedDecision = decision
-            }
-            
-            for worryText in result.worries {
-                let item = ExtractedItem(context: context)
-                item.id = UUID()
-                item.text = worryText
-                item.type = "worry"
-                item.createdAt = Date()
-                item.sourceDump = dump
-            }
-            
-            for ideaText in result.ideas {
-                let item = ExtractedItem(context: context)
-                item.id = UUID()
-                item.text = ideaText
-                item.type = "idea"
-                item.createdAt = Date()
-                item.sourceDump = dump
-            }
-            
-            try context.save()
-            
-            entitlements.incrementProcessUsage()
-            
-            extractionResult = result
-            currentBrainDump = dump
-            
-            // Signal completion - overlay will handle the fade out
-            DispatchQueue.main.async {
-                self.processingCompleted = true
-            }
-            
-        } catch {
-            print("Failed to process: \(error)")
-            DispatchQueue.main.async {
-                self.processingError = "Something went wrong. Please try again."
-            }
-        }
-    }
-    
-    // MARK: - Deduplication Helpers
-    private func normalizeText(_ text: String) -> String {
-        return text
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-            .lowercased()
-    }
-    
-    private func isDuplicateTask(_ normalizedText: String, in dump: BrainDump, context: NSManagedObjectContext) -> Bool {
-        let fetchRequest: NSFetchRequest<ExtractedItem> = ExtractedItem.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "type == 'task' AND sourceDump == %@ AND isPromotedToTask == YES", dump)
-        
-        do {
-            let existingItems = try context.fetch(fetchRequest)
-            for item in existingItems {
-                if let text = item.text {
-                    if normalizeText(text) == normalizedText {
-                        return true
-                    }
-                }
-            }
-        } catch {
-            print("Error checking for duplicates: \(error)")
-        }
-        
-        return false
-    }
-    
-    // MARK: - Speech to Text
+
+    // MARK: - Recording — iOS only
     #if canImport(UIKit)
-    private func convertSpeechToText(from url: URL, completion: @escaping (String?) -> Void) {
-        let recognizer = SFSpeechRecognizer()
-        let request = SFSpeechURLRecognitionRequest(url: url)
-        
-        recognizer?.recognitionTask(with: request) { result, error in
-            guard result != nil, error == nil else {
-                completion(nil)
+    private func startRecording() {
+        AVAudioSession.sharedInstance().requestRecordPermission { micAllowed in
+            guard micAllowed else {
+                DispatchQueue.main.async { showPermissionAlert = true }
                 return
             }
-            
-            if let result = result {
+            SFSpeechRecognizer.requestAuthorization { status in
+                DispatchQueue.main.async {
+                    guard status == .authorized else {
+                        showPermissionAlert = true
+                        return
+                    }
+                    beginAudioRecording()
+                }
+            }
+        }
+    }
+
+    private func beginAudioRecording() {
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+
+            let fileURL = getDocumentsDirectory().appendingPathComponent("quietly_recording.m4a")
+            audioURL = fileURL
+
+            let settings: [String: Any] = [
+                AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+                AVSampleRateKey: 16000.0,
+                AVNumberOfChannelsKey: 1,
+                AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+            ]
+
+            audioRecorder = try AVAudioRecorder(url: fileURL, settings: settings)
+            audioRecorder?.isMeteringEnabled = true
+            audioRecorder?.record()
+
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isRecording = true
+                isPaused = false
+            }
+        } catch {
+            DispatchQueue.main.async {
+                processingError = "Could not start recording. Please try again."
+            }
+        }
+    }
+
+    private func togglePause() {
+        guard let recorder = audioRecorder else { return }
+        if isPaused { recorder.record() } else { recorder.pause() }
+        withAnimation(.easeInOut(duration: 0.2)) { isPaused.toggle() }
+    }
+
+    private func stopRecording() {
+        audioRecorder?.stop()
+        audioRecorder = nil
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+
+        withAnimation(.easeInOut(duration: 0.3)) {
+            isRecording = false
+            isPaused = false
+            isTranscribing = true
+        }
+
+        guard let url = audioURL else { isTranscribing = false; return }
+
+        transcribeSpeech(from: url) { transcribed in
+            DispatchQueue.main.async {
+                isTranscribing = false
+                if let text = transcribed, !text.isEmpty {
+                    inputText = text
+                    withAnimation(.easeInOut(duration: 0.2)) { inputMode = .write }
+                }
+            }
+        }
+    }
+
+    private func transcribeSpeech(from url: URL, completion: @escaping (String?) -> Void) {
+        if speechRecognizer == nil { speechRecognizer = SFSpeechRecognizer() }
+        guard let recognizer = speechRecognizer, recognizer.isAvailable else { completion(nil); return }
+
+        recognitionTask?.cancel()
+        recognitionTask = nil
+
+        let request = SFSpeechURLRecognitionRequest(url: url)
+        request.shouldReportPartialResults = false
+
+        recognitionTask = recognizer.recognitionTask(with: request) { [self] result, error in
+            self.recognitionTask = nil
+            if error != nil { completion(nil); return }
+            if let result = result, result.isFinal {
                 completion(result.bestTranscription.formattedString)
             }
         }
     }
+    #else
+    private func startRecording() {}
+    private func togglePause() {}
+    private func stopRecording() {
+        withAnimation(.easeInOut(duration: 0.3)) { isRecording = false; isPaused = false }
+    }
     #endif
+
+    private func getDocumentsDirectory() -> URL {
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+    }
+
+    // MARK: - Extraction
+    private func handleProcess() {
+        guard entitlements.canProcessToday else { showPaywall = true; return }
+        processingCompleted = false
+        processingError = nil
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        withAnimation(.easeInOut(duration: 0.2)) { isProcessing = true }
+        Task { await performExtraction() }
+    }
+
+    private func performExtraction() async {
+        let textToProcess = inputText
+        do {
+            // Try Apple Intelligence; fall back to local extractor on any failure
+            let result: ExtractionResult = await {
+                if #available(iOS 26.0, *) {
+                    do {
+                        let ext = IntelligenceExtractor()
+                        if ext.isAvailable {
+                            return try await ext.extract(from: textToProcess)
+                        }
+                    } catch {
+                        // Apple Intelligence unavailable or failed — use local fallback
+                    }
+                }
+                return LocalExtractor().extractSync(from: textToProcess)
+            }()
+
+            guard !result.tasks.isEmpty || !result.decisions.isEmpty || !result.worries.isEmpty || !result.ideas.isEmpty else {
+                processingError = "No items found. Try adding more detail."
+                return
+            }
+
+            let context = PersistenceController.shared.container.viewContext
+            let dump = BrainDump(context: context)
+            dump.id = UUID(); dump.rawText = textToProcess
+            dump.mode = inputMode == .write ? "text" : "voice"
+            dump.createdAt = Date(); dump.processedAt = Date()
+
+            for extractedTask in result.tasks {
+                let normalized = normalizeText(extractedTask.text)
+                guard !isDuplicateTask(normalized, in: dump, context: context) else { continue }
+                let item = ExtractedItem(context: context)
+                item.id = UUID(); item.text = extractedTask.text; item.type = "task"
+                item.createdAt = Date(); item.sourceDump = dump; item.isPromotedToTask = true
+                let task = TaskItem(context: context)
+                task.id = UUID(); task.title = extractedTask.text; task.createdAt = Date()
+                task.isCompleted = false; task.sourceKind = "clear"; task.sourceDump = dump
+                item.linkedTask = task
+            }
+
+            for decisionDraft in result.decisions {
+                let item = ExtractedItem(context: context)
+                item.id = UUID(); item.text = decisionDraft.question; item.type = "decision"
+                item.createdAt = Date(); item.sourceDump = dump
+                let decision = Decision(context: context)
+                decision.id = UUID(); decision.question = decisionDraft.question
+                decision.optionA = decisionDraft.optionA; decision.optionB = decisionDraft.optionB
+                decision.status = "active"; decision.createdAt = Date()
+                decision.isLockedPreview = !entitlements.isPro; decision.sourceDump = dump
+                if entitlements.isPro {
+                    decision.analysis = decisionDraft.analysis
+                    decision.suggestedNextStep = decisionDraft.nextStep
+                }
+                item.linkedDecision = decision
+            }
+
+            for worryText in result.worries {
+                let item = ExtractedItem(context: context)
+                item.id = UUID(); item.text = worryText; item.type = "worry"
+                item.createdAt = Date(); item.sourceDump = dump
+            }
+
+            for ideaText in result.ideas {
+                let item = ExtractedItem(context: context)
+                item.id = UUID(); item.text = ideaText; item.type = "idea"
+                item.createdAt = Date(); item.sourceDump = dump
+            }
+
+            try context.save()
+            entitlements.incrementProcessUsage()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            extractionResult = result
+            currentBrainDump = dump
+            processingCompleted = true
+
+        } catch {
+            processingError = "Something went wrong. Please try again."
+        }
+    }
+
+    private func normalizeText(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .lowercased()
+    }
+
+    private func isDuplicateTask(_ normalized: String, in dump: BrainDump, context: NSManagedObjectContext) -> Bool {
+        let fetch: NSFetchRequest<ExtractedItem> = ExtractedItem.fetchRequest()
+        fetch.predicate = NSPredicate(format: "type == 'task' AND sourceDump == %@ AND isPromotedToTask == YES", dump)
+        let existing = (try? context.fetch(fetch)) ?? []
+        return existing.contains { normalizeText($0.text ?? "") == normalized }
+    }
 }
 
 #Preview {
